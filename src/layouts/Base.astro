@@ -5,6 +5,7 @@ import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import { site, linkedin } from '@/data/site';
 import { canonicalUrl } from '@/lib/work';
+import { unlisted, UNLISTED_ROBOTS } from '@/lib/visibility';
 import '@/styles/global.css';
 
 interface Props {
@@ -16,6 +17,7 @@ interface Props {
   ogType?: 'website' | 'article' | 'profile';
   /** Extra JSON-LD objects for this page. */
   jsonLd?: Record<string, unknown>[];
+  /** Keep this page out of search even once the site is public (e.g. the 404). */
   noindex?: boolean;
 }
 
@@ -42,7 +44,7 @@ const personLd = {
 
 const structuredData = [personLd, ...jsonLd];
 const ga4 = site.analytics.ga4;
-const hideFromSearch = noindex || site.advanceCopy;
+const robots = unlisted ? UNLISTED_ROBOTS : noindex ? 'noindex' : null;
 ---
 
 <!doctype html>
@@ -53,7 +55,9 @@ const hideFromSearch = noindex || site.advanceCopy;
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    {hideFromSearch && <meta name="robots" content="noindex" />}
+    {robots && <meta name="robots" content={robots} />}
+    {site.verification.google && <meta name="google-site-verification" content={site.verification.google} />}
+    {site.verification.bing && <meta name="msvalidate.01" content={site.verification.bing} />}
 
     <!-- Start the turntable paused for reduced-motion users (or whoever paused it last). Runs before paint. -->
     <script is:inline>
@@ -71,7 +75,7 @@ const hideFromSearch = noindex || site.advanceCopy;
     <meta name="theme-color" content="#12100d" media="(prefers-color-scheme: dark)" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="sitemap" href="/sitemap-index.xml" />
+    {!unlisted && <link rel="sitemap" href="/sitemap-index.xml" />}
     {linkedin && <link rel="me" href={linkedin.href} />}
 
     <!-- Open Graph / LinkedIn / iMessage / Slack previews -->

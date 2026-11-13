@@ -85,10 +85,21 @@ const plant = tenure(PLANT_START);
 export const site = {
   /**
    * ADVANCE COPY: shows the "advance promo copy" strip across the top of every
-   * page and keeps search engines out (noindex). Flip to false once Gwido has
-   * read, rewritten and approved every word on the site.
+   * page. Flip to false once Gwido has read, rewritten and approved every word
+   * on the site.
    */
   advanceCopy: true,
+
+  /**
+   * WHO CAN FIND THE SITE (see src/lib/visibility.ts for how it works).
+   *  'unlisted': live for anyone with the link, and link previews work, but
+   *              kept out of search results, AI datasets and web archives.
+   *  'public':   open to search engines, with the sitemap advertised.
+   * Going public takes two edits: this line, and removing the X-Robots-Tag
+   * header from vercel.json. The build fails if the two disagree, or if this
+   * says 'public' while advanceCopy is still true.
+   */
+  visibility: 'unlisted' as 'unlisted' | 'public',
 
   /** The imaginary label the whole design hangs on. */
   label: {
@@ -462,6 +473,18 @@ export const site = {
     vercel: true,
     /** Optional GA4 measurement ID, e.g. 'G-XXXXXXXXXX'. */
     ga4: null as string | null,
+  },
+
+  /**
+   * Ownership tokens for Google Search Console and Bing Webmaster Tools: the
+   * content="…" value from their "HTML tag" verification method. Safe to add
+   * while unlisted. URL Inspection should then report "Excluded by 'noindex'
+   * tag", which proves the hiding works, and on launch day you can submit the
+   * sitemap from the same place.
+   */
+  verification: {
+    google: null as string | null,
+    bing: null as string | null,
   },
 };
 

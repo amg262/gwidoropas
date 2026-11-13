@@ -15,6 +15,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { tenure, capitalize } from '@/lib/dates';
+import portraitPhoto from '@/assets/portrait/gwido-ropas.jpg';
 
 /* ── Types ─────────────────────────────────────────────────────────────────── */
 
@@ -119,6 +120,19 @@ export const site = {
 
   /** The plain-English job line under the name. */
   headline: 'AI-forward marketer',
+
+  /**
+   * The back-cover photo, shown with the liner notes (About) and used as the
+   * image in the structured data. Optimised to AVIF/WebP at build time.
+   * Replace the file with a larger original (1000px+ square) for sharper
+   * retina screens; set to null to hide it.
+   * Deliberately kept off the printable résumé: US hiring norms advise against
+   * photos on résumés.
+   */
+  portrait: {
+    src: portraitPhoto,
+    alt: 'Gwido Ropas smiling, in a black polo shirt, in front of an orange and black mural.',
+  } as { src: ImageMetadata; alt: string } | null,
 
   hero: {
     /** Words wrapped in *asterisks* are set in the serif italic. */

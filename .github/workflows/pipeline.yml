@@ -1,0 +1,296 @@
+# Verify → containerize → contract-test on every PR and push.
+# On main, also: version → push a multi-arch image to GHCR → git tag + GitHub Release.
+#
+#   PR:    Verify ─▶ Container                          (nothing is published)
+#   main:  Verify ─▶ Container ─┐
+#               └──▶ Plan ──────┴─▶ Publish vX.Y.Z      (image, attestation, tag, release)
+#
+# Vercel still deploys production from its own Git integration; this pipeline
+# gates PRs and produces the portable, versioned artifact. See README → Pipeline.
+
+name: Pipeline
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version bump. "auto" reads Conventional Commits (feat → minor, ! → major, else patch).
+        type: choice
+        options: [auto, patch, minor, major]
+        default: auto
+
+# Least privilege by default; the publish job asks for exactly what it needs.
+permissions:
+  contents: read
+
+concurrency:
+  # PRs: a new push cancels the stale run. main: runs queue, so releases are
+  # cut one at a time and two merges can't compute the same version.
+  group: pipeline-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # The public origin baked into canonicals, og:image, the sitemap and robots.txt.
+  # Override with a repository variable: Settings → Secrets and variables → Actions → Variables → SITE_URL.
+  SITE_URL: ${{ vars.SITE_URL || 'https://www.gwidoropas.com' }}
+  IMAGE: ghcr.io/${{ github.repository }}
+  ASTRO_TELEMETRY_DISABLED: '1'
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type-check content and components
+        run: npm run check
+
+      - name: Build
+        run: npm run build
+
+      - name: Same Node major in .nvmrc and the Dockerfile
+        run: |
+          want="$(tr -dc '0-9.' < .nvmrc | cut -d. -f1)"
+          grep -Eq "^FROM .*node:${want}-" Dockerfile || {
+            echo "::error file=Dockerfile::The Dockerfile's Node image must be major ${want} to match .nvmrc (and Vercel's Node.js version setting)."
+            exit 1
+          }
+
+      - name: Container can be compiled from vercel.json
+        run: node scripts/vercel-headers-to-nginx.mjs vercel.json > /dev/null
+
+  container:
+    name: Container
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Build image (linux/amd64, loaded for testing)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: gwidoropas:ci
+          build-args: |
+            SITE_URL=${{ env.SITE_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: nginx accepts the generated config
+        run: docker run --rm gwidoropas:ci nginx -t
+
+      - name: Start it, locked down as in production
+        run: >-
+          docker run -d --name site -p 8080:8080
+          --read-only --tmpfs /tmp --cap-drop=ALL --security-opt no-new-privileges
+          gwidoropas:ci
+
+      # The same contract production passes (see production-check.yml).
+      - name: Contract test
+        run: node scripts/smoke.mjs http://localhost:8080 --container --origin "$SITE_URL"
+
+      - name: Container logs
+        if: failure()
+        run: docker logs site
+
+  plan:
+    name: Plan release
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      release: ${{ steps.next.outputs.release }}
+      existing: ${{ steps.next.outputs.existing }}
+      version: ${{ steps.next.outputs.version }}
+      tag: ${{ steps.next.outputs.tag }}
+      previous: ${{ steps.next.outputs.previous }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # all tags and history, to find the last release
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+
+      - name: Work out the version
+        id: next
+        env:
+          BUMP: ${{ inputs.bump || 'auto' }}
+        run: |
+          node scripts/next-version.mjs | tee next.txt
+          echo "### Release plan" >> "$GITHUB_STEP_SUMMARY"
+          sed 's/^/    /' next.txt >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    name: Publish ${{ needs.plan.outputs.tag }}
+    needs: [container, plan]
+    if: needs.plan.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write # create the tag and the GitHub Release
+      packages: write # push to ghcr.io
+      id-token: write # sign the provenance attestation (Sigstore, keyless)
+      attestations: write
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+      TAG: ${{ needs.plan.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image tags and labels
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.IMAGE }}
+          flavor: latest=false
+          tags: |
+            type=semver,pattern={{version}},value=${{ env.TAG }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.TAG }}
+            type=semver,pattern={{major}},value=${{ env.TAG }}
+            type=sha,format=short
+            type=raw,value=latest
+          labels: |
+            org.opencontainers.image.title=gwidoropas
+            org.opencontainers.image.description=Ropas Records: the portfolio and living résumé of Gwido Ropas, served by nginx.
+            org.opencontainers.image.url=${{ env.SITE_URL }}
+
+      # The build stage runs once, natively (see the Dockerfile), and is a cache
+      # hit from the Container job, so the amd64 content is what was just tested.
+      - name: Build and push (linux/amd64, linux/arm64)
+        id: push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          build-args: |
+            SITE_URL=${{ env.SITE_URL }}
+            VERSION=${{ env.VERSION }}
+            REVISION=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: mode=max
+          sbom: true
+
+      # Signed SLSA provenance, verifiable with `gh attestation verify`.
+      # push-to-registry stays off on purpose (CVE-2026-59891 in @sigstore/oci);
+      # the attestation lives in GitHub's attestation store instead.
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+
+      - name: Export the built site (same build stage as the image)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: site
+          outputs: type=local,dest=site
+          build-args: |
+            SITE_URL=${{ env.SITE_URL }}
+          cache-from: type=gha
+          provenance: false
+          sbom: false
+
+      - name: Package the site reproducibly
+        run: |
+          mkdir -p release
+          epoch="$(git log -1 --format=%ct)"
+          tar --sort=name --mtime="@${epoch}" --owner=0 --group=0 --numeric-owner \
+              -C site -czf "release/gwidoropas-site-${VERSION}.tar.gz" .
+          (cd release && sha256sum -- * > SHA256SUMS)
+          cat release/SHA256SUMS
+
+      - name: Tag and GitHub Release
+        if: needs.plan.outputs.existing != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          cat > notes.md <<EOF
+          ### Container image
+
+          \`\`\`bash
+          docker pull ${IMAGE}:${VERSION}
+          docker run --rm -p 8080:8080 ${IMAGE}:${VERSION}
+          \`\`\`
+
+          \`linux/amd64\` + \`linux/arm64\` · digest \`${DIGEST}\` · built for ${SITE_URL}
+
+          Verify where it came from:
+
+          \`\`\`bash
+          gh attestation verify oci://${IMAGE}:${VERSION} --repo ${GITHUB_REPOSITORY}
+          \`\`\`
+
+          ### Static site
+
+          \`gwidoropas-site-${VERSION}.tar.gz\` holds exactly the files the image serves. Checksums are in \`SHA256SUMS\`.
+
+          EOF
+          gh release create "$TAG" release/* \
+            --target "$GITHUB_SHA" \
+            --title "$TAG" \
+            --notes-file notes.md \
+            --generate-notes
+
+      - name: Summary
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          tags=""
+          while read -r t; do tags+="\`${t##*:}\` "; done <<< "$TAGS"
+          {
+            echo "### Published ${TAG}"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Image | \`${IMAGE}@${DIGEST}\` |"
+            echo "| Tags | ${tags} |"
+            echo "| Built for | ${SITE_URL} |"
+            echo "| Release | ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/${TAG} |"
+          } >> "$GITHUB_STEP_SUMMARY"

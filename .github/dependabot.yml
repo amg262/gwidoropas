@@ -1,0 +1,40 @@
+# Weekly update PRs. Each one runs the full pipeline (build, container, contract
+# test) before it can be merged.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
+
+  # Base images are pinned by tag and digest in the Dockerfile; this keeps the
+  # digests fresh (security patches) and proposes new tags.
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    ignore:
+      # Node majors move deliberately, together with .nvmrc and Vercel's
+      # Node.js setting (CI fails if the Dockerfile and .nvmrc disagree).
+      - dependency-name: node
+        update-types: ['version-update:semver-major']
+      # nginx odd minors (1.31, 1.33…) are mainline; stay on the stable line
+      # and move to the next even minor by hand.
+      - dependency-name: nginxinc/nginx-unprivileged
+        update-types: ['version-update:semver-minor']
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      astro:
+        patterns: ['astro', '@astrojs/*']
+      fonts:
+        patterns: ['@fontsource/*', '@fontsource-variable/*']
+      images:
+        patterns: ['satori', 'sharp']

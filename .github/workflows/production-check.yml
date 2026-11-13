@@ -1,0 +1,45 @@
+# Runs the contract test (scripts/smoke.mjs) against the live site:
+#  • after every successful Vercel production deployment,
+#  • once a day, to catch drift nobody deployed (a dashboard setting, a domain change),
+#  • on demand.
+# The checks are the same ones the container passes in pipeline.yml. A failure
+# here means production no longer behaves the way vercel.json says, e.g. the
+# noindex header that keeps the unlisted site out of search has gone missing.
+
+name: Production check
+
+on:
+  deployment_status:
+  schedule:
+    - cron: '23 11 * * *' # daily, 11:23 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    name: Live site honours the contract
+    # Vercel reports Preview deployments too; those sit behind Vercel's SSO
+    # protection, so only a successful Production deployment is tested.
+    if: >-
+      github.event_name != 'deployment_status' ||
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment_status.environment == 'Production')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SITE_URL: ${{ vars.SITE_URL || 'https://www.gwidoropas.com' }}
+    steps:
+      # On deployment_status this checks out the deployed commit, so the test
+      # compares production with the vercel.json that was just shipped.
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+
+      - name: Contract test
+        run: node scripts/smoke.mjs "$SITE_URL"

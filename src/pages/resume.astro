@@ -1,58 +1,73 @@
 ---
 /**
- * A one-page résumé generated from src/data/site.ts and the case studies,
- * so the site and the résumé never drift apart. Visitors can print it or
- * "Save as PDF" — the print stylesheet strips the site chrome.
+ * The printable résumé: the one-page "send version", pressed from
+ * src/data/site.ts so the site and the résumé can never drift apart.
+ * On screen it's a lyric-sheet insert; in print it's plain black on white.
  */
 import Base from '@/layouts/Base.astro';
 import Icon from '@/components/Icon.astro';
-import { site } from '@/data/site';
-import { getWork } from '@/lib/work';
+import { site, linkedin } from '@/data/site';
+import { formatRange, formatPressing } from '@/lib/dates';
 
-const work = (await getWork()).slice(0, 3);
-const host = Astro.site ? Astro.site.host : '';
+const host = Astro.site && !Astro.site.host.startsWith('localhost') ? Astro.site.host : null;
+const marketing = site.experience.filter((e) => e.format !== 'Box set');
+const operations = site.experience.filter((e) => e.format === 'Box set');
+const linkedinText = linkedin?.href.replace(/^https?:\/\/(www\.)?/, '');
 ---
 
-<Base title="Résumé" description={`Résumé of ${site.name}: ${site.education.degree}, ${site.education.school}.`}>
+<Base title="Résumé" description={`Résumé of ${site.name}, ${site.headline.toLowerCase()}: experience, skills and education.`}>
   <div class="container toolbar">
-    <a class="link-arrow" href="/"><Icon name="arrow-left" /> Back to portfolio</a>
+    <a class="link-arrow" href="/"><Icon name="arrow-left" /> Back to the record</a>
+    <p class="mono pressed">Pressed {formatPressing()} from the master tape</p>
     <button class="btn" type="button" data-print><Icon name="printer" /> Print / Save as PDF</button>
   </div>
 
   <article class="container sheet" aria-label={`Résumé of ${site.name}`}>
     <header class="r-head">
-      <div>
-        <h1>{site.name}</h1>
-        <p class="r-sub">{site.education.degree}, {site.education.school} · {site.education.graduation}</p>
-      </div>
-      <ul class="r-contact">
-        <li><a href={`mailto:${site.contact.email}`}>{site.contact.email}</a></li>
-        {host && <li><a href="/">{host}</a></li>}
-        {site.social.filter((s) => s.label === 'LinkedIn').map((s) => <li><a href={s.href}>{s.href.replace(/^https?:\/\/(www\.)?/, '')}</a></li>)}
-        <li>{site.contact.location}</li>
-      </ul>
+      <h1 class="r-name">{site.name}</h1>
+      <p class="r-contact">
+        <span>{site.location.city}, {site.location.region}</span>
+        {site.contact.phone && <span>{site.contact.phone}</span>}
+        <span><a href={`mailto:${site.contact.email}`}>{site.contact.email}</a></span>
+        {linkedin && <span><a href={linkedin.href}>{linkedinText}</a></span>}
+        {host && <span><a href="/">{host}</a></span>}
+      </p>
     </header>
 
     <section>
-      <h2>Profile</h2>
-      <p>{site.hero.intro}</p>
+      <h2>Summary</h2>
+      <p>{site.resumeSummary}</p>
     </section>
 
     <section>
-      <h2>Experience</h2>
+      <h2>Skills &amp; tools</h2>
+      <ul class="r-skills">
+        {
+          site.resumeSkills.map((s) => (
+            <li>
+              <strong>{s.group}:</strong> {s.items}
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section>
+      <h2>Marketing experience</h2>
       {
-        site.experience.map((job) => (
+        marketing.map((job) => (
           <div class="r-item">
             <div class="r-row">
               <h3>
-                {job.role}, <span>{job.org}</span>
+                {job.org}
+                {job.orgNote && <span class="r-note">, {job.orgNote.toLowerCase()}</span>}
+                <span class="r-note">, {job.location}</span>
               </h3>
-              <p class="r-date">
-                {job.start} – {job.end}
-              </p>
+              <p class="r-date">{formatRange(job.start, job.end)}</p>
             </div>
+            <p class="r-role">{job.role}</p>
             <ul>
-              {job.bullets.map((b) => (
+              {(job.resumeBullets ?? job.bullets).map((b) => (
                 <li>{b}</li>
               ))}
             </ul>
@@ -61,72 +76,51 @@ const host = Astro.site ? Astro.site.host : '';
       }
     </section>
 
-    <section>
-      <h2>Selected projects</h2>
-      {
-        work.map((w) => (
+    {
+      operations.map((job) => (
+        <section>
+          <h2>Operations experience</h2>
           <div class="r-item">
             <div class="r-row">
               <h3>
-                {w.data.title} <span>· {w.data.context}</span>
+                {job.org}
+                <span class="r-note">, {job.location}</span>
               </h3>
+              <p class="r-date">{formatRange(job.start, job.end)}</p>
             </div>
-            <p>
-              {w.data.summary}
-            </p>
-            <p class="r-metrics">
-              {w.data.metrics.map((m, i) => (
-                <>
-                  {i > 0 && <span aria-hidden="true"> · </span>}
-                  <strong>{m.value}</strong> {m.label}
-                </>
+            <p class="r-role">{job.discs?.map((d) => `${d.role} (${formatRange(d.start, d.end)})`).join('  |  ')}</p>
+            <ul>
+              {(job.resumeBullets ?? job.bullets).map((b) => (
+                <li>{b}</li>
               ))}
-            </p>
+            </ul>
           </div>
-        ))
-      }
-    </section>
+        </section>
+      ))
+    }
 
     <section>
       <h2>Education</h2>
-      <div class="r-item">
-        <div class="r-row">
-          <h3>
-            {site.education.school}, <span>{site.education.degree}</span>
-          </h3>
-          <p class="r-date">{site.education.graduation}</p>
-        </div>
-        <ul>
-          {site.education.details.map((d) => <li>{d}</li>)}
-        </ul>
-      </div>
+      {
+        site.education.schools.map((s) => (
+          <div class="r-item">
+            <div class="r-row">
+              <h3>
+                {s.school}
+                {s.place && <span class="r-note">, {s.place}</span>}
+              </h3>
+              <p class="r-date">{s.when}</p>
+            </div>
+            <p class="r-plain">{s.detail}</p>
+          </div>
+        ))
+      }
+      <p class="r-plain r-projects"><strong>Projects:</strong> {site.resumeProjects.join('  |  ')}</p>
     </section>
 
-    <section class="r-split">
-      <div>
-        <h2>Skills</h2>
-        <dl>
-          {
-            site.skills.map((g) => (
-              <div>
-                <dt>{g.group}:</dt> <dd>{g.items.join(', ')}</dd>
-              </div>
-            ))
-          }
-        </dl>
-      </div>
-      <div>
-        <h2>Certifications</h2>
-        <ul class="plain">
-          {
-            site.certifications.map((c) => (
-              <li>
-                {c.name}, {c.issuer} ({c.year})
-              </li>
-            ))
-          }
-        </ul>
-      </div>
+    <section>
+      <h2>Earlier experience</h2>
+      <p class="r-plain">{site.earlier.map((e) => `${e.role.replace(/ \(.*\)/, '')}, ${e.org.replace(', Wisconsin State Fair', ' at the Wisconsin State Fair')}${e.when !== 'Seasonal' ? ` (${e.when.replace(' – ', '–')})` : ''}`).join('  |  ')}</p>
     </section>
   </article>
 </Base>
@@ -145,60 +139,52 @@ const host = Astro.site ? Astro.site.host : '';
     padding-block: 2rem 1.5rem;
   }
 
-  .toolbar :global(svg) {
-    width: 1.05em;
-    height: 1.05em;
+  .pressed {
+    font-size: 0.74rem;
+    color: var(--muted);
   }
 
   .sheet {
-    max-width: 52rem;
+    max-width: 54rem;
     margin-bottom: clamp(3rem, 2rem + 4vw, 6rem);
     padding: clamp(1.5rem, 1rem + 3vw, 3.5rem);
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
+    background: var(--card);
+    color: var(--ink);
+    border-radius: 2px;
+    box-shadow: var(--shadow-sleeve);
     font-size: 0.95rem;
     line-height: 1.5;
+    border-top: 10px solid var(--red);
   }
 
   .r-head {
     display: grid;
-    gap: 1rem;
-    padding-bottom: 1.25rem;
+    gap: 0.6rem;
+    padding-bottom: 1rem;
     border-bottom: 2px solid var(--ink);
   }
 
-  @media (min-width: 40rem) {
-    .r-head {
-      grid-template-columns: 1fr auto;
-      align-items: end;
-    }
-  }
-
-  h1 {
-    font-size: var(--step-4);
-    font-weight: 400;
-    letter-spacing: -0.03em;
-  }
-
-  .r-sub {
-    margin-top: 0.4rem;
-    color: var(--ink-2);
+  .r-name {
+    font-stretch: 62%;
+    font-weight: 800;
+    font-size: clamp(2.6rem, 1.8rem + 3vw, 4rem);
+    line-height: 0.9;
+    letter-spacing: 0.005em;
+    text-transform: uppercase;
   }
 
   .r-contact {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    font-size: 0.92em;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0;
     color: var(--ink-2);
+    font-size: 0.9em;
   }
 
-  @media (min-width: 40rem) {
-    .r-contact {
-      text-align: right;
-    }
+  .r-contact span + span::before {
+    content: '|';
+    margin-inline: 0.6em;
+    color: var(--line);
   }
 
   .r-contact a {
@@ -206,21 +192,23 @@ const host = Astro.site ? Astro.site.host : '';
   }
 
   section {
-    padding-top: 1.4em;
+    padding-top: 1.2em;
   }
 
   h2 {
-    margin-bottom: 0.7em;
-    font-family: var(--font-body);
-    font-size: 0.8em;
+    margin-bottom: 0.55em;
+    padding-bottom: 0.25em;
+    border-bottom: 1px solid var(--line);
+    font-stretch: 125%;
+    font-size: 0.72em;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--accent-ink);
+    color: var(--red-ink);
   }
 
   .r-item + .r-item {
-    margin-top: 0.9em;
+    margin-top: 0.85em;
   }
 
   .r-row {
@@ -231,95 +219,70 @@ const host = Astro.site ? Astro.site.host : '';
   }
 
   h3 {
-    font-family: var(--font-body);
-    font-size: 1.03em;
-    font-weight: 600;
-    letter-spacing: 0;
+    font-size: 1.02em;
+    font-weight: 700;
     line-height: 1.4;
+    letter-spacing: 0;
   }
 
-  h3 span {
+  .r-note {
     font-weight: 400;
     color: var(--ink-2);
   }
 
   .r-date {
-    color: var(--muted);
+    color: var(--ink-2);
     font-size: 0.92em;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
 
-  .r-item ul {
-    margin: 0.3rem 0 0;
+  .r-role {
+    font-style: italic;
+    color: var(--ink-2);
+  }
+
+  .r-item ul,
+  .r-skills {
+    margin: 0.25rem 0 0;
     padding-left: 1.1rem;
     color: var(--ink-2);
   }
 
-  .r-item p {
-    color: var(--ink-2);
-  }
-
-  .r-metrics {
-    margin-top: 0.15rem;
-    font-size: 0.9em;
-  }
-
-  .r-item strong {
+  .r-skills strong,
+  .r-projects strong {
     color: var(--ink);
-    font-weight: 600;
   }
 
-  .r-split {
-    display: grid;
-    gap: 0 2.5em;
-  }
-
-  @media (min-width: 40rem) {
-    .r-split {
-      grid-template-columns: 1.4fr 1fr;
-    }
-  }
-
-  dl {
-    display: grid;
-    gap: 0.3rem;
-    margin: 0;
-  }
-
-  dt {
-    display: inline;
-    font-weight: 600;
-  }
-
-  dd {
-    display: inline;
-    margin: 0;
+  .r-plain {
     color: var(--ink-2);
   }
 
-  .plain {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    color: var(--ink-2);
-  }
-
-  .plain li + li {
-    margin-top: 0.3rem;
+  .r-projects {
+    margin-top: 0.6em;
   }
 
   @media print {
     @page {
       size: letter;
-      margin: 0.55in 0.6in;
+      margin: 0.45in 0.55in;
     }
 
     :global(.site-header),
     :global(.site-footer),
     :global(.skip-link),
-    :global(.template-banner),
+    :global(.promo-strip),
     .toolbar {
       display: none !important;
+    }
+
+    :global(body::after) {
+      display: none !important;
+    }
+
+    :global(html),
+    :global(body) {
+      background: #fff !important;
     }
 
     .sheet {
@@ -331,32 +294,25 @@ const host = Astro.site ? Astro.site.host : '';
       border-radius: 0;
       box-shadow: none;
       background: #fff;
-      font-size: 9.5pt;
-      line-height: 1.42;
+      font-size: 8.9pt;
+      line-height: 1.36;
       --ink: #000;
-      --ink-2: #222;
-      --muted: #444;
-      --accent-ink: #000;
+      --ink-2: #1f1f1f;
+      --line: #999;
+      --red-ink: #000;
+      color: #000;
     }
 
-    h1 {
-      font-size: 24pt;
+    .r-name {
+      font-size: 26pt;
     }
 
     section {
-      padding-top: 1.1em;
+      padding-top: 0.75em;
     }
 
-    .r-head {
-      grid-template-columns: 1fr auto;
-    }
-
-    .r-contact {
-      text-align: right;
-    }
-
-    .r-split {
-      grid-template-columns: 1.4fr 1fr;
+    .r-item + .r-item {
+      margin-top: 0.55em;
     }
 
     section,

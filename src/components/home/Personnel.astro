@@ -1,0 +1,211 @@
+---
+import SectionHead from '@/components/SectionHead.astro';
+import { site } from '@/data/site';
+
+// The repertoire set as a festival bill: three acts per line, headliners biggest.
+const lines: string[][] = [];
+for (let i = 0; i < site.repertoire.length; i += 3) lines.push(site.repertoire.slice(i, i + 3));
+---
+
+<section id="skills" class="section" aria-labelledby="skills-title">
+  <div class="container">
+    <SectionHead id="skills-title" track="B1" label="Skills & tools" title="Personnel" meta="& instrumentation">
+      <p>Credits as they’d read on the back of the sleeve: the instrument, and the part it plays.</p>
+    </SectionHead>
+
+    <div class="credits">
+      {
+        site.skills.map((g) => (
+          <section class="credit-group" aria-label={g.group}>
+            <h3 class="wide">{g.group}</h3>
+            <ul>
+              {g.credits.map((c) => (
+                <li>
+                  <span class="c-name">{c.name}</span>
+                  <span class="c-dots" aria-hidden="true" />
+                  <span class="c-part serif">{c.part}</span>
+                </li>
+              ))}
+            </ul>
+            {g.note && <p class="c-note">{g.note}</p>}
+          </section>
+        ))
+      }
+    </div>
+
+    <section class="bill" aria-labelledby="bill-title">
+      <h3 id="bill-title" class="wide bill-head"><span>The repertoire</span><span class="mono">Marketing</span></h3>
+      <ul class="bill-lines">
+        {
+          lines.map((acts, i) => (
+            <li class:list={['display', `bill-${i}`]}>
+              {acts.map((a, j) => (
+                <>
+                  {j > 0 && (
+                    <span class="bill-star" aria-hidden="true">
+                      ✦
+                    </span>
+                  )}
+                  <span>{a}</span>
+                </>
+              ))}
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="strengths" aria-labelledby="strengths-title">
+      <h3 id="strengths-title" class="wide">Also on this record</h3>
+      <ul>
+        {site.strengths.map((s) => <li class="chip">{s}</li>)}
+      </ul>
+    </section>
+  </div>
+</section>
+
+<style>
+  .credits {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    gap: clamp(2rem, 1.5rem + 2vw, 3rem) clamp(2rem, 1rem + 4vw, 5rem);
+  }
+
+  .credit-group h3 {
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.4rem;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .credit-group ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .credit-group li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    padding-block: 0.55rem;
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .c-name {
+    font-weight: 650;
+    white-space: nowrap;
+  }
+
+  .c-dots {
+    flex: 1;
+    min-width: 1.5rem;
+    border-bottom: 1.5px dotted var(--line);
+    transform: translateY(-0.25em);
+  }
+
+  .c-part {
+    font-size: 1.12rem;
+    color: var(--ink-2);
+    text-align: right;
+  }
+
+  .c-note {
+    margin-top: 0.8rem;
+    font-size: 0.88rem;
+    color: var(--muted);
+  }
+
+  /* ── The bill ── */
+  .bill {
+    margin-top: clamp(4rem, 3rem + 4vw, 6.5rem);
+    padding: clamp(1.75rem, 1rem + 3vw, 3.5rem);
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: var(--radius);
+    text-align: center;
+  }
+
+  .bill-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    margin-bottom: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+    border-bottom: 1px solid color-mix(in srgb, var(--paper) 25%, transparent);
+    color: var(--mustard);
+  }
+
+  .bill-head .mono {
+    color: color-mix(in srgb, var(--paper) 65%, transparent);
+    text-transform: uppercase;
+    font-size: 0.72rem;
+  }
+
+  .bill-lines {
+    display: grid;
+    gap: clamp(0.6rem, 0.4rem + 0.8vw, 1rem);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .bill-lines li {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.1em 0.45em;
+    line-height: 0.92;
+  }
+
+  .bill-0 {
+    font-size: clamp(2.2rem, 1rem + 5vw, 5.4rem);
+  }
+  .bill-1 {
+    font-size: clamp(1.8rem, 0.9rem + 3.6vw, 4rem);
+    color: var(--mustard);
+  }
+  .bill-2 {
+    font-size: clamp(1.5rem, 0.9rem + 2.6vw, 3rem);
+  }
+  .bill-3 {
+    font-size: clamp(1.25rem, 0.85rem + 1.8vw, 2.2rem);
+    color: color-mix(in srgb, var(--paper) 75%, transparent);
+  }
+
+  .bill-star {
+    font-size: 0.4em;
+    color: var(--red);
+  }
+
+  .strengths {
+    display: grid;
+    gap: 1rem;
+    margin-top: clamp(2.5rem, 2rem + 2vw, 3.5rem);
+  }
+
+  @media (min-width: 52rem) {
+    .strengths {
+      grid-template-columns: 16rem minmax(0, 1fr);
+      align-items: center;
+    }
+  }
+
+  .strengths h3 {
+    color: var(--muted);
+  }
+
+  .strengths ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .strengths .chip {
+    font-size: 0.8rem;
+    padding: 0.55em 0.9em;
+  }
+</style>

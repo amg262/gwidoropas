@@ -1,0 +1,93 @@
+---
+/**
+ * The turntable's start/stop button. Pauses every looping animation on the
+ * site (records, ticker, equalizers): required for WCAG 2.2.2, and polite.
+ * State lives on <html data-motion> and persists across pages.
+ */
+import Icon from './Icon.astro';
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<button type="button" class:list={['motion-toggle', className]} data-motion-toggle aria-pressed="false">
+  <span class="mt-led" aria-hidden="true"></span>
+  <span class="mt-pause"><Icon name="pause" /> <span class="mono">Stop the record</span></span>
+  <span class="mt-play"><Icon name="play" /> <span class="mono">Play the record</span></span>
+</button>
+
+<script>
+  function sync() {
+    const paused = document.documentElement.dataset.motion === 'paused';
+    document.querySelectorAll<HTMLButtonElement>('[data-motion-toggle]').forEach((b) => b.setAttribute('aria-pressed', String(paused)));
+  }
+  document.querySelectorAll<HTMLButtonElement>('[data-motion-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const next = document.documentElement.dataset.motion === 'paused' ? 'playing' : 'paused';
+      document.documentElement.dataset.motion = next;
+      try {
+        localStorage.setItem('motion', next);
+      } catch {
+        /* private mode: fine, it just won't persist */
+      }
+      sync();
+    });
+  });
+  sync();
+</script>
+
+<style>
+  .motion-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.9rem 0.55rem 0.7rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--ink);
+    font-size: 0.75rem;
+    transition: border-color 0.2s var(--ease);
+  }
+
+  .motion-toggle:hover {
+    border-color: var(--ink);
+  }
+
+  .motion-toggle :global(svg) {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+
+  .motion-toggle > span:not(.mt-led) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .mt-led {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--red);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--red) 25%, transparent);
+  }
+
+  .mt-play {
+    display: none !important;
+  }
+
+  .motion-toggle[aria-pressed='true'] .mt-play {
+    display: inline-flex !important;
+  }
+
+  .motion-toggle[aria-pressed='true'] .mt-pause {
+    display: none !important;
+  }
+
+  .motion-toggle[aria-pressed='true'] .mt-led {
+    background: var(--muted);
+    box-shadow: none;
+  }
+</style>

@@ -2,16 +2,18 @@
 import type { GetStaticPaths } from 'astro';
 import { render } from 'astro:content';
 import Base from '@/layouts/Base.astro';
-import Cover from '@/components/Cover.astro';
+import Sleeve from '@/components/Sleeve.astro';
+import Record from '@/components/Record.astro';
 import Icon from '@/components/Icon.astro';
+import MotionToggle from '@/components/MotionToggle.astro';
 import { site } from '@/data/site';
-import { getWork, formatMonth, canonicalUrl, type Work } from '@/lib/work';
+import { getWork, canonicalUrl, type Work } from '@/lib/work';
 
 export const getStaticPaths = (async () => {
   const work = await getWork();
   return work.map((entry, i) => ({
     params: { id: entry.id },
-    props: { entry, next: work[(i + 1) % work.length] },
+    props: { entry, next: work[(i + 1) % work.length]! },
   }));
 }) satisfies GetStaticPaths;
 
@@ -21,17 +23,33 @@ interface Props {
 }
 
 const { entry, next } = Astro.props;
-const { title, summary, client, context, role, date, duration, tags, tools, metrics, accent, cover, coverAlt } = entry.data;
-const { Content } = await render(entry);
+const d = entry.data;
+const { Content, headings } = await render(entry);
+
+const tracks = headings.filter((h) => h.depth === 2);
+const formatLabel = d.context === 'Class project' ? 'LP' : d.status === 'recording' ? 'EP · in progress' : 'LP';
+const BAR_COLOURS = [d.cover.accent, d.cover.fg === '#16130f' ? '#2a47c0' : d.cover.fg, '#1e5e55', '#2a47c0', '#e8a597'];
+const total = d.breakdown?.items.reduce((sum, it) => sum + it.value, 0) ?? 1;
+
+const credits: [string, string][] = [
+  ['Client', d.client],
+  ['Recorded at', d.studio],
+  ...(d.released ? ([['Released', d.released]] as [string, string][]) : []),
+  ['Format', d.context],
+  ['Personnel', d.role],
+  ...(d.tools.length ? ([['Instruments', d.tools.join(', ')]] as [string, string][]) : []),
+  ...(d.credits.length ? ([['Credits', d.credits.join(' · ')]] as [string, string][]) : []),
+];
 
 const articleLd = {
   '@context': 'https://schema.org',
   '@type': 'CreativeWork',
-  name: title,
-  abstract: summary,
-  dateCreated: date.toISOString().slice(0, 10),
-  author: { '@type': 'Person', name: site.name, url: Astro.site?.href },
-  keywords: tags.join(', '),
+  name: d.title,
+  alternateName: d.album,
+  abstract: d.summary,
+  dateCreated: d.date.toISOString().slice(0, 10),
+  creator: { '@type': 'Person', name: site.name, url: Astro.site?.href },
+  keywords: d.tags.join(', '),
   url: canonicalUrl(Astro.url, Astro.site).href,
 };
 
@@ -41,269 +59,667 @@ const breadcrumbLd = {
   itemListElement: [
     { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site?.href },
     { '@type': 'ListItem', position: 2, name: 'Work', item: new URL('/#work', Astro.site).href },
-    { '@type': 'ListItem', position: 3, name: title },
+    { '@type': 'ListItem', position: 3, name: d.title },
   ],
 };
 ---
 
-<Base title={title} description={summary} ogImage={`/og/work/${entry.id}.png`} ogType="article" jsonLd={[articleLd, breadcrumbLd]}>
+<Base title={d.title} description={d.summary} ogImage={`/og/work/${entry.id}.png`} ogType="article" jsonLd={[articleLd, breadcrumbLd]}>
   <article>
-    <header class="container case-head">
-      <a class="back link-arrow" href="/#work"><Icon name="arrow-left" /> All work</a>
-      <p class="eyebrow">{context} · {formatMonth(date)}</p>
-      <h1>{title}</h1>
-      <p class="lede">{summary}</p>
-      <ul class="tag-list" aria-label="Disciplines">
-        {tags.map((t) => <li class="tag">{t}</li>)}
-      </ul>
-    </header>
-
-    <div class="container">
-      <Cover seed={entry.id} accent={accent} metric={metrics[0]} cover={cover} coverAlt={coverAlt} size="hero" eager />
+    <div class="container a-back">
+      <a class="link-arrow" href="/#work"><Icon name="arrow-left" /> Back to the crate</a>
     </div>
 
-    <section class="container results" aria-labelledby="results-title">
-      <h2 id="results-title" class="visually-hidden">Results at a glance</h2>
-      <dl class="metrics" style={`--c: ${accent}`}>
+    <header class="container a-head">
+      <div class="a-art">
+        <div class="a-turntable">
+          <Record class="a-record" uid="album" ring={`${site.label.name} · ${d.album} · ${d.catalog} · `} center={d.catalog} sub={d.album} labelBg={d.cover.accent} labelFg={d.cover.bg} />
+          <Sleeve
+            class="a-sleeve"
+            spec={{ ...d.cover, seed: entry.id }}
+            album={d.album}
+            catalog={d.catalog}
+            sticker={d.status === 'recording' ? 'Now recording' : undefined}
+            image={d.coverImage}
+            imageAlt={d.coverAlt}
+            eager
+          />
+        </div>
+        <MotionToggle class="a-toggle" />
+      </div>
+
+      <div class="a-info">
+        <p class="a-kicker">
+          <span class="mono a-cat">{d.catalog}</span>
+          <span class="chip">{formatLabel}</span>
+          {d.status === 'recording' && <span class="chip chip-live"><span class="eq loop"><i /><i /><i /></span> Now recording</span>}
+        </p>
+        <h1 class="a-title">{d.title}</h1>
+        <p class="a-summary serif">{d.summary}</p>
+
+        <dl class="a-credits">
+          {
+            credits.map(([k, v]) => (
+              <div>
+                <dt class="wide">{k}</dt>
+                <dd>{v}</dd>
+              </div>
+            ))
+          }
+        </dl>
+
+        <ul class="a-tags" aria-label="Disciplines">
+          {d.tags.map((t) => <li class="chip">{t}</li>)}
+        </ul>
+
         {
-          metrics.map((m) => (
-            <div>
+          d.link && (
+            <a class="btn btn-ghost a-link" href={d.link.href} rel="noopener" target="_blank">
+              Visit {d.link.label} <Icon name="arrow-up-right" />
+            </a>
+          )
+        }
+      </div>
+    </header>
+
+    <section class="container a-metrics" aria-labelledby="metrics-title">
+      <h2 id="metrics-title" class="wide a-label">{d.metricsTitle}</h2>
+      <dl class="metrics">
+        {
+          d.metrics.map((m) => (
+            <div class:list={{ pending: m.pending }}>
               <dt>{m.label}</dt>
-              <dd>{m.value}</dd>
+              <dd class="display">{m.value}</dd>
             </div>
           ))
         }
       </dl>
+
+      {
+        d.breakdown && (
+          <figure class="breakdown">
+            <figcaption class="wide a-label">{d.breakdown.title}</figcaption>
+            <div class="bar" role="img" aria-label={d.breakdown.items.map((it) => `${it.label}: ${it.display}`).join('; ')}>
+              {d.breakdown.items.map((it, i) => (
+                <span style={`flex:${it.value};background:${BAR_COLOURS[i % BAR_COLOURS.length]}`}>
+                  <span class="mono">{Math.round((it.value / total) * 100)}%</span>
+                </span>
+              ))}
+            </div>
+            <ul class="bar-key">
+              {d.breakdown.items.map((it, i) => (
+                <li>
+                  <span class="swatch" style={`background:${BAR_COLOURS[i % BAR_COLOURS.length]}`} aria-hidden="true" />
+                  <span class="display">{it.display}</span>
+                  <span>{it.label}</span>
+                </li>
+              ))}
+            </ul>
+          </figure>
+        )
+      }
     </section>
 
-    <div class="container case-body">
-      <aside class="facts" aria-label="Project details">
-        <dl>
-          <div><dt>Client</dt><dd>{client}</dd></div>
-          <div><dt>My role</dt><dd>{role}</dd></div>
-          <div><dt>Timeline</dt><dd>{duration}</dd></div>
-          {
-            tools.length > 0 && (
-              <div>
-                <dt>Tools</dt>
-                <dd>{tools.join(', ')}</dd>
-              </div>
-            )
-          }
-        </dl>
-      </aside>
+    <div class="container a-body">
+      {
+        tracks.length > 0 && (
+          <nav class="tracklist" aria-label="Tracklist">
+            <p class="wide a-label">Tracklist</p>
+            <ol>
+              {tracks.map((h, i) => (
+                <li>
+                  <a href={`#${h.slug}`}>
+                    <span class="mono">A{i + 1}</span> {h.text}
+                  </a>
+                </li>
+              ))}
+              {d.remaster && (
+                <li class="bonus">
+                  <a href="#remaster">
+                    <span class="mono">Bonus</span> The remaster
+                  </a>
+                </li>
+              )}
+            </ol>
+          </nav>
+        )
+      }
       <div class="prose">
         <Content />
       </div>
     </div>
+
+    {
+      d.remaster && (
+        <section id="remaster" class="remaster band" aria-labelledby="remaster-title">
+          <div class="container">
+            <header class="rm-head">
+              <p class="rm-track">
+                <span class="mono">Bonus track</span>
+                <span class="wide">What I’d do differently</span>
+              </p>
+              <h2 id="remaster-title" class="display">
+                The remaster
+              </h2>
+              <p class="serif rm-intro">{d.remaster.intro}</p>
+            </header>
+            <ol class="rm-list">
+              {d.remaster.changes.map((c, i) => (
+                <li>
+                  <p class="mono rm-no">{String(i + 1).padStart(2, '0')}</p>
+                  <div class="rm-orig">
+                    <p class="wide">Original pressing</p>
+                    <p>{c.original}</p>
+                  </div>
+                  <div class="rm-new">
+                    <p class="wide">Remastered</p>
+                    <p>{c.remaster}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+      )
+    }
+
+    {
+      d.context === 'Class project' && (
+        <p class="container mono disclaimer">
+          A class project at {d.studio}, shown for portfolio purposes. Brand names belong to their owners.
+        </p>
+      )
+    }
   </article>
 
-  <nav class="container next" aria-label="Next case study">
+  <nav class="container next" aria-label="More">
     {
       next.id !== entry.id && (
         <a href={`/work/${next.id}`} class="next-link">
-          <span class="eyebrow">Next case study</span>
-          <span class="next-title">{next.data.title}</span>
-          <span class="link-arrow">
-            Read it <Icon name="arrow-right" />
+          <Sleeve class="next-sleeve" spec={{ ...next.data.cover, seed: next.id }} album={next.data.album} catalog={next.data.catalog} image={next.data.coverImage} imageAlt={next.data.coverAlt} />
+          <span class="next-text">
+            <span class="wide">Next release · {next.data.catalog}</span>
+            <span class="next-title">{next.data.title}</span>
+            <span class="link-arrow">
+              Play it <Icon name="arrow-right" />
+            </span>
           </span>
         </a>
       )
     }
-    <div class="next-cta">
-      <p>Like what you see?</p>
-      <a class="btn" href="/#contact">Get in touch <Icon name="arrow-right" /></a>
+    <div class="next-cta band">
+      <p class="display">Like what you hear?</p>
+      <a class="btn next-btn" href="/#contact">Book a session <Icon name="arrow-right" /></a>
     </div>
   </nav>
 </Base>
 
 <style>
-  .case-head {
+  .a-back {
+    padding-top: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  }
+
+  .a-head {
     display: grid;
-    gap: 1.1rem;
+    gap: clamp(2.5rem, 2rem + 3vw, 4.5rem);
+    padding-block: clamp(2rem, 1.5rem + 2vw, 3rem) clamp(3rem, 2rem + 3vw, 5rem);
+  }
+
+  @media (min-width: 62rem) {
+    .a-head {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+      align-items: start;
+    }
+  }
+
+  /* ── Art ── */
+  .a-art {
+    display: grid;
+    gap: 1.25rem;
     justify-items: start;
-    padding-block: clamp(2rem, 1rem + 4vw, 4rem) clamp(2rem, 1rem + 3vw, 3rem);
   }
 
-  .back {
-    margin-bottom: 1rem;
+  @media (min-width: 62rem) {
+    .a-art {
+      position: sticky;
+      top: 6rem;
+    }
   }
 
-  .back :global(svg) {
-    width: 1.05em;
-    height: 1.05em;
+  .a-turntable {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1.38 / 1;
   }
 
-  h1 {
-    max-width: 22ch;
-    font-size: var(--step-4);
-    font-weight: 400;
-    letter-spacing: -0.03em;
+  .a-turntable :global(.a-sleeve) {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 72.5%;
+    z-index: 2;
   }
 
-  .lede {
-    max-width: 44rem;
-    font-size: var(--step-1);
-    line-height: 1.5;
+  .a-turntable :global(.a-record) {
+    position: absolute;
+    top: 2.2%;
+    left: 2.2%;
+    width: 68%;
+    z-index: 1;
+    transform: translateX(38%);
+    animation: album-out 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both;
+  }
+
+  @keyframes album-out {
+    from {
+      transform: translateX(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .a-turntable :global(.a-record) {
+      animation: none;
+    }
+  }
+
+  /* ── Info ── */
+  .a-info {
+    display: grid;
+    gap: 1.3rem;
+    align-content: start;
+  }
+
+  .a-kicker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .a-cat {
+    padding: 0.25em 0.6em;
+    border: 1px solid var(--ink);
+    border-radius: 999px;
+    font-size: 0.78rem;
+  }
+
+  .a-title {
+    font-size: var(--step-5);
+    font-stretch: 62%;
+    font-weight: 800;
+    line-height: 0.88;
+    text-transform: uppercase;
+  }
+
+  .a-summary {
+    max-width: 34rem;
+    font-size: var(--step-2);
+    line-height: 1.2;
     color: var(--ink-2);
   }
 
-  .results {
-    margin-top: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  .a-credits {
+    display: grid;
+    margin: 0.5rem 0 0;
+    border-top: 2px solid var(--ink);
+  }
+
+  .a-credits > div {
+    display: grid;
+    grid-template-columns: 8.5rem minmax(0, 1fr);
+    gap: 1rem;
+    padding-block: 0.65rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .a-credits dt {
+    padding-top: 0.25rem;
+    font-size: 0.62rem;
+    color: var(--muted);
+  }
+
+  .a-credits dd {
+    margin: 0;
+  }
+
+  .a-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .a-link {
+    justify-self: start;
+  }
+
+  .a-label {
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  /* ── Numbers ── */
+  .a-metrics {
+    padding-top: 1.1rem;
+    border-top: 4px solid var(--ink);
   }
 
   .metrics {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
     gap: 1px;
     margin: 0;
     background: var(--line);
     border: 1px solid var(--line);
-    border-radius: var(--radius);
-    overflow: hidden;
   }
 
   .metrics > div {
     display: flex;
     flex-direction: column-reverse;
     justify-content: flex-end;
-    gap: 0.4rem;
-    padding: 1.5rem 1.5rem 1.6rem;
-    background: var(--surface);
+    gap: 0.6rem;
+    padding: 1.4rem 1.4rem 1.5rem;
+    background: var(--paper);
   }
 
   .metrics dd {
     margin: 0;
-    font-family: var(--font-display);
-    font-size: var(--step-4);
-    line-height: 1;
-    letter-spacing: -0.03em;
-    color: var(--ink);
+    font-size: clamp(3rem, 2rem + 3.5vw, 4.8rem);
+    line-height: 0.85;
   }
 
   .metrics dt {
     color: var(--muted);
-    font-size: var(--step--1);
-    line-height: 1.4;
+    font-size: 0.9rem;
+    line-height: 1.35;
   }
 
-  .case-body {
+  .metrics .pending dd {
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--ink);
+  }
+
+  .breakdown {
+    margin: clamp(2rem, 1.5rem + 2vw, 3rem) 0 0;
+  }
+
+  .bar {
+    display: flex;
+    height: 3.25rem;
+    gap: 3px;
+  }
+
+  .bar > span {
+    display: flex;
+    align-items: center;
+    padding-inline: 0.9rem;
+    color: #16130f;
+    border-radius: 2px;
+  }
+
+  .bar .mono {
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .bar-key {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    gap: 0.75rem 2rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .bar-key li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    color: var(--ink-2);
+  }
+
+  .swatch {
+    flex: none;
+    width: 0.8rem;
+    height: 0.8rem;
+    border-radius: 2px;
+    transform: translateY(0.05rem);
+  }
+
+  .bar-key .display {
+    font-size: 1.7rem;
+    color: var(--ink);
+  }
+
+  /* ── Body ── */
+  .a-body {
     display: grid;
     gap: 2.5rem;
-    padding-block: clamp(3rem, 2rem + 3vw, 5rem);
+    padding-block: clamp(3.5rem, 2.5rem + 3vw, 5.5rem);
   }
 
-  @media (min-width: 60rem) {
-    .case-body {
+  @media (min-width: 62rem) {
+    .a-body {
       grid-template-columns: 15rem minmax(0, 1fr);
       gap: 5rem;
     }
-
-    .facts {
+    .tracklist {
       position: sticky;
       top: 6rem;
       align-self: start;
     }
   }
 
-  .facts dl {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-    gap: 1.25rem;
+  .tracklist ol {
     margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 2px solid var(--ink);
   }
 
-  @media (min-width: 60rem) {
-    .facts dl {
-      grid-template-columns: 1fr;
-      padding-top: 1.5rem;
-      border-top: 2px solid var(--ink);
+  .tracklist li {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .tracklist a {
+    display: flex;
+    gap: 0.75rem;
+    padding-block: 0.6rem;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .tracklist .mono {
+    min-width: 2.6rem;
+    font-size: 0.76rem;
+    color: var(--red-ink);
+    padding-top: 0.15rem;
+  }
+
+  .tracklist .bonus a {
+    font-family: var(--font-serif), serif;
+    font-style: italic;
+    font-size: 1.15rem;
+  }
+
+  /* ── Remaster ── */
+  .remaster {
+    padding-block: clamp(4rem, 3rem + 4vw, 7rem);
+  }
+
+  .rm-head {
+    display: grid;
+    gap: 1rem;
+    max-width: 52rem;
+    margin-bottom: clamp(2.5rem, 2rem + 2vw, 4rem);
+  }
+
+  .rm-track {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+
+  .rm-track .mono {
+    padding: 0.3em 0.75em;
+    border-radius: 999px;
+    background: var(--mustard);
+    color: #16130f;
+    font-size: 0.74rem;
+  }
+
+  .rm-track .wide {
+    color: var(--band-muted);
+  }
+
+  .rm-head h2 {
+    font-size: var(--step-6);
+  }
+
+  .rm-head h2::after {
+    content: ' (v2)';
+    font-family: var(--font-serif), serif;
+    font-style: italic;
+    font-weight: 400;
+    font-stretch: 100%;
+    text-transform: none;
+    font-size: 0.4em;
+    color: var(--mustard);
+  }
+
+  .rm-intro {
+    font-size: var(--step-2);
+    line-height: 1.2;
+    color: var(--band-muted);
+  }
+
+  .rm-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--band-line);
+  }
+
+  .rm-list li {
+    display: grid;
+    gap: 1rem 2.5rem;
+    padding-block: 1.75rem;
+    border-bottom: 1px solid var(--band-line);
+  }
+
+  @media (min-width: 56rem) {
+    .rm-list li {
+      grid-template-columns: 3rem minmax(0, 0.85fr) minmax(0, 1.15fr);
     }
   }
 
-  .facts dt {
-    font-size: var(--step--1);
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+  .rm-no {
+    font-size: 0.8rem;
+    color: var(--mustard);
+    padding-top: 0.15rem;
+  }
+
+  .rm-orig,
+  .rm-new {
+    display: grid;
+    gap: 0.5rem;
+    align-content: start;
+  }
+
+  .rm-orig .wide,
+  .rm-new .wide {
+    font-size: 0.6rem;
+  }
+
+  .rm-orig .wide {
+    color: var(--band-muted);
+  }
+
+  .rm-orig p:last-child {
+    color: var(--band-muted);
+    text-decoration: line-through;
+    text-decoration-color: rgb(240 88 60 / 0.7);
+    text-decoration-thickness: 1.5px;
+  }
+
+  .rm-new .wide {
+    color: var(--mustard);
+  }
+
+  .rm-new p:last-child {
+    font-size: 1.08rem;
+    line-height: 1.55;
+  }
+
+  .disclaimer {
+    padding-block: 1.5rem 0;
+    font-size: 0.74rem;
     color: var(--muted);
   }
 
-  .facts dd {
-    margin: 0.2rem 0 0;
-    font-size: 0.97rem;
-  }
-
-  .prose :global(h2:first-child) {
-    margin-top: 0;
-  }
-
+  /* ── Next ── */
   .next {
     display: grid;
     gap: 1.5rem;
-    padding-bottom: clamp(4rem, 3rem + 4vw, 6rem);
+    padding-block: clamp(3rem, 2rem + 3vw, 5rem);
   }
 
-  @media (min-width: 52rem) {
+  @media (min-width: 56rem) {
     .next {
-      grid-template-columns: 1.6fr 1fr;
+      grid-template-columns: 1.5fr 1fr;
     }
   }
 
-  .next-link,
-  .next-cta {
-    display: grid;
-    gap: 0.9rem;
-    align-content: start;
-    padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--surface);
-  }
-
   .next-link {
+    display: grid;
+    grid-template-columns: 8rem minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: center;
+    padding: 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
     text-decoration: none;
-    transition:
-      border-color 0.25s var(--ease),
-      transform 0.25s var(--ease);
+    transition: border-color 0.2s var(--ease);
   }
 
   .next-link:hover {
     border-color: var(--ink);
-    transform: translateY(-2px);
+    color: inherit;
+  }
+
+  .next-text {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .next-text .wide {
+    color: var(--muted);
   }
 
   .next-title {
-    font-family: var(--font-display);
-    font-size: var(--step-3);
-    line-height: 1.1;
-    letter-spacing: -0.02em;
+    font-size: var(--step-2);
+    font-weight: 700;
+    line-height: 1.12;
   }
 
   .next-cta {
-    background: var(--ink);
-    color: var(--paper);
-    border-color: var(--ink);
+    display: grid;
+    gap: 1.25rem;
+    align-content: center;
     justify-items: start;
+    padding: 1.75rem;
+    border-radius: var(--radius);
   }
 
-  .next-cta p {
-    font-family: var(--font-display);
-    font-size: var(--step-2);
+  .next-cta .display {
+    font-size: var(--step-4);
   }
 
-  .next-cta .btn {
-    --btn-bg: var(--paper);
-    --btn-fg: var(--ink);
-  }
-
-  .next-cta .btn:hover {
-    --btn-bg: var(--accent);
-    --btn-fg: #fff;
-  }
-
-  .link-arrow :global(svg) {
-    width: 1.05em;
-    height: 1.05em;
+  .next-btn {
+    --btn-bg: var(--mustard);
+    --btn-bd: var(--mustard);
+    --btn-fg: #16130f;
   }
 </style>

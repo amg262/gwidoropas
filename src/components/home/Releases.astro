@@ -1,0 +1,82 @@
+---
+import SectionHead from '@/components/SectionHead.astro';
+import ReleaseCard from '@/components/ReleaseCard.astro';
+import { site } from '@/data/site';
+import { getWork, orderForHome } from '@/lib/work';
+
+const work = orderForHome(await getWork());
+---
+
+<section id="work" class="section releases" aria-labelledby="work-title">
+  <div class="container">
+    <SectionHead id="work-title" track="A3" label="Selected work" title="The releases" meta={`${work.length} titles`}>
+      <p>Case studies, each with the brief, the work, the result and a <em class="serif">remaster</em>: what I’d do differently now.</p>
+    </SectionHead>
+
+    <div class="crate">
+      {work.map((entry) => <ReleaseCard entry={entry} />)}
+    </div>
+
+    {
+      site.otherProjects.length > 0 && (
+        <aside class="also" aria-labelledby="also-title">
+          <h3 id="also-title" class="wide">
+            Also recorded at WCTC
+          </h3>
+          <ul>
+            {site.otherProjects.map((p) => (
+              <li>
+                <strong>{p.title}.</strong> {p.note}
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .releases {
+    background: var(--paper-2);
+  }
+
+  .crate {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+    gap: clamp(3rem, 2rem + 3vw, 4.5rem) clamp(2rem, 1rem + 3vw, 4rem);
+  }
+
+  .also {
+    display: grid;
+    gap: 1rem;
+    margin-top: clamp(3.5rem, 2.5rem + 3vw, 5.5rem);
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+  }
+
+  @media (min-width: 52rem) {
+    .also {
+      grid-template-columns: 16rem minmax(0, 1fr);
+      gap: 2rem;
+    }
+  }
+
+  .also h3 {
+    color: var(--muted);
+    padding-top: 0.2rem;
+  }
+
+  .also ul {
+    display: grid;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--ink-2);
+  }
+
+  .also strong {
+    color: var(--ink);
+  }
+</style>

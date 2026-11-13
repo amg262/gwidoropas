@@ -1,0 +1,186 @@
+---
+import SectionHead from '@/components/SectionHead.astro';
+import { site } from '@/data/site';
+
+const { credentials, coursework, coding } = site.education;
+// Earned plaques first, then whatever is still in the pressing plant.
+const ordered = [...credentials.filter((c) => c.status === 'certified'), ...credentials.filter((c) => c.status === 'pressing')];
+const earned = credentials.filter((c) => c.status === 'certified').length;
+---
+
+<section id="education" class="section certified" aria-labelledby="education-title">
+  <div class="container">
+    <SectionHead id="education-title" track="B2" label="Education & credentials" title="Certified" meta={`${earned} on the wall · 1 pressing`} />
+
+    <ul class="plaques">
+      {
+        ordered.map((c) => (
+          <li class:list={['plaque', c.status]}>
+            <div class="pl-frame" aria-hidden="true">
+              <div class="pl-disc">
+                <span class="pl-label" />
+              </div>
+            </div>
+            <div class="pl-plate">
+              <p class="wide pl-status">{c.status === 'certified' ? 'Certified' : 'In the pressing plant'}</p>
+              <h3 class="pl-title">{c.credential}</h3>
+              <p class="pl-school">{c.school}</p>
+              {c.date && <p class="mono pl-date">{c.date}</p>}
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+
+    <dl class="coursework">
+      <div>
+        <dt class="wide">Coursework</dt>
+        <dd>{coursework.join(' · ')}</dd>
+      </div>
+      <div>
+        <dt class="wide">Coding coursework</dt>
+        <dd class="mono">{coding.join(' · ')}</dd>
+      </div>
+    </dl>
+  </div>
+</section>
+
+<style>
+  .certified {
+    background: var(--paper-2);
+  }
+
+  .plaques {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 13.5rem), 1fr));
+    gap: clamp(1.25rem, 1rem + 1.5vw, 2rem);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .plaque {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    background: #16130f;
+    color: #efe8da;
+    border-radius: 3px;
+    box-shadow:
+      inset 0 0 0 6px #221d17,
+      inset 0 0 0 7px #3a3128,
+      var(--shadow-sleeve);
+    overflow: hidden;
+  }
+
+  .pl-frame {
+    display: grid;
+    place-items: center;
+    padding: 1.6rem 1.6rem 1.1rem;
+  }
+
+  /* A gold record: brushed-metal conic sheen + grooves + a red label. */
+  .pl-disc {
+    position: relative;
+    width: 82%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+      repeating-radial-gradient(circle, rgb(0 0 0 / 0.1) 0 1px, transparent 1px 3px),
+      conic-gradient(from 20deg, #a87a24, #f6e1a0, #c49330, #7d5a14, #f1d585, #b0852a, #f6e1a0, #9a6f1d, #a87a24);
+    box-shadow:
+      0 0 0 1px rgb(0 0 0 / 0.4),
+      0 10px 22px -10px rgb(0 0 0 / 0.8);
+  }
+
+  .pl-label {
+    position: absolute;
+    inset: 34%;
+    border-radius: 50%;
+    background: radial-gradient(circle, #16130f 0 9%, var(--red) 10%);
+  }
+
+  .pressing .pl-disc {
+    background:
+      repeating-radial-gradient(circle, rgb(255 255 255 / 0.06) 0 1px, transparent 1px 3px),
+      #0e0d0b;
+    box-shadow:
+      0 0 0 1.5px dashed rgb(239 232 218 / 0.4),
+      0 10px 22px -10px rgb(0 0 0 / 0.8);
+    outline: 1.5px dashed rgb(239 232 218 / 0.35);
+    outline-offset: 6px;
+  }
+
+  .pressing .pl-label {
+    background: radial-gradient(circle, #16130f 0 9%, var(--mustard) 10%);
+  }
+
+  /* The engraved brass plate. */
+  .pl-plate {
+    display: grid;
+    gap: 0.3rem;
+    align-content: start;
+    margin: 0 1rem 1rem;
+    padding: 0.95rem 1rem 1.05rem;
+    background: linear-gradient(160deg, #e9d18e, #c9a24e 45%, #e3c57a 70%, #b48a36);
+    color: #2a1f0e;
+    border-radius: 2px;
+    text-align: center;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5), inset 0 -1px 0 rgb(0 0 0 / 0.2);
+  }
+
+  .pressing .pl-plate {
+    background: #2a251f;
+    color: #efe8da;
+    box-shadow: inset 0 0 0 1px #3e382f;
+  }
+
+  .pl-status {
+    font-size: 0.6rem;
+    opacity: 0.8;
+  }
+
+  .pl-title {
+    font-size: 1.02rem;
+    line-height: 1.2;
+    letter-spacing: -0.005em;
+  }
+
+  .pl-school {
+    font-size: 0.82rem;
+    opacity: 0.85;
+  }
+
+  .pl-date {
+    font-size: 0.74rem;
+  }
+
+  .coursework {
+    display: grid;
+    gap: 1.25rem;
+    margin: clamp(2.5rem, 2rem + 2vw, 3.5rem) 0 0;
+  }
+
+  .coursework > div {
+    display: grid;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+  }
+
+  @media (min-width: 52rem) {
+    .coursework > div {
+      grid-template-columns: 16rem minmax(0, 1fr);
+      gap: 2rem;
+    }
+  }
+
+  .coursework dt {
+    color: var(--muted);
+    padding-top: 0.2rem;
+  }
+
+  .coursework dd {
+    margin: 0;
+    color: var(--ink-2);
+  }
+</style>

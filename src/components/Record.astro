@@ -1,0 +1,122 @@
+---
+/**
+ * A 12-inch LP in SVG. The disc spins at 33⅓ rpm (one turn every 1.8 s); the
+ * light sheen is a separate layer that stays still, the way a reflection does.
+ * Purely decorative: hidden from assistive tech.
+ */
+interface Props {
+  uid: string;
+  /** Text set around the label's edge. */
+  ring: string;
+  /** Big text in the middle of the label. */
+  center: string;
+  /** Small line under the center text. */
+  sub?: string;
+  labelBg?: string;
+  labelFg?: string;
+  spin?: boolean;
+  class?: string;
+}
+
+const { uid, ring, center, sub, labelBg = '#e0452b', labelFg = '#16130f', spin = true, class: className } = Astro.props;
+
+// Grooves, with three smooth "track gaps" like a real side of vinyl.
+const gaps: [number, number][] = [
+  [103, 108],
+  [137, 142],
+  [167, 172],
+];
+const grooves: number[] = [];
+for (let r = 70; r < 195; r += 2.3) {
+  if (!gaps.some(([a, b]) => r > a && r < b)) grooves.push(Math.round(r * 10) / 10);
+}
+const ringPath = `M200,200 m-47,0 a47,47 0 1,1 94,0 a47,47 0 1,1 -94,0`;
+---
+
+<div class:list={['record', className]} aria-hidden="true">
+  <svg class:list={['disc', { loop: spin }]} viewBox="0 0 400 400" focusable="false">
+    <defs>
+      <path id={`ring-${uid}`} d={ringPath}></path>
+    </defs>
+    <circle cx="200" cy="200" r="199.5" fill="#0e0d0b"></circle>
+    <circle cx="200" cy="200" r="198" fill="none" stroke="#fff" stroke-opacity=".1" stroke-width="1"></circle>
+    <g fill="none" stroke="#fff" stroke-opacity=".05" stroke-width=".7">
+      {grooves.map((r) => <circle cx="200" cy="200" r={r} />)}
+    </g>
+    <g fill="none" stroke="#fff" stroke-opacity=".08" stroke-width="2.6">
+      {gaps.map(([a, b]) => <circle cx="200" cy="200" r={(a + b) / 2} />)}
+    </g>
+    <circle cx="200" cy="200" r="66" fill={labelBg}></circle>
+    <circle cx="200" cy="200" r="61" fill="none" stroke={labelFg} stroke-opacity=".35" stroke-width=".8"></circle>
+    <text class="ring" fill={labelFg}>
+      <textPath href={`#ring-${uid}`} textLength="292" lengthAdjust="spacing">{ring}</textPath>
+    </text>
+    <text class="center" x="200" y={sub ? 203 : 207} text-anchor="middle" fill={labelFg}>{center}</text>
+    {sub && <text class="sub" x="200" y="219" text-anchor="middle" fill={labelFg}>{sub}</text>}
+    <circle cx="200" cy="200" r="4.2" fill="var(--paper)"></circle>
+  </svg>
+  <span class="sheen"></span>
+</div>
+
+<style>
+  .record {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    filter: drop-shadow(0 18px 24px rgb(0 0 0 / 0.35));
+  }
+
+  .disc {
+    width: 100%;
+    height: 100%;
+    will-change: transform;
+  }
+
+  .disc.loop {
+    animation: spin var(--spin) linear infinite;
+  }
+
+  .ring {
+    font-family: var(--font-mono), monospace;
+    font-size: 8.4px;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+
+  .center {
+    font-family: var(--font-sans), sans-serif;
+    font-stretch: 62%;
+    font-weight: 800;
+    font-size: 21px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .sub {
+    font-family: var(--font-sans), sans-serif;
+    font-stretch: 125%;
+    font-weight: 600;
+    font-size: 6.4px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  /* The reflection: a still conic highlight over the grooves, masked off the paper label. */
+  .sheen {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    background: conic-gradient(
+      from 210deg,
+      transparent 0deg,
+      rgb(255 255 255 / 0.16) 18deg,
+      transparent 42deg,
+      transparent 180deg,
+      rgb(255 255 255 / 0.1) 200deg,
+      transparent 228deg
+    );
+    -webkit-mask: radial-gradient(circle, transparent 33%, #000 33.5%, #000 99%, transparent 100%);
+    mask: radial-gradient(circle, transparent 33%, #000 33.5%, #000 99%, transparent 100%);
+  }
+</style>

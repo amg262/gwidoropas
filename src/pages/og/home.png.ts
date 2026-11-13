@@ -1,8 +1,7 @@
 import type { APIRoute } from 'astro';
-import { renderOg } from '@/lib/og';
-import { site } from '@/data/site';
+import { renderHomeOg } from '@/lib/og';
 
 export const GET: APIRoute = async () => {
-  const png = await renderOg({ eyebrow: 'Marketing portfolio', title: site.hero.headline });
+  const png = await renderHomeOg();
   return new Response(new Uint8Array(png), { headers: { 'Content-Type': 'image/png' } });
 };

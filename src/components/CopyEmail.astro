@@ -2,12 +2,13 @@
 import Icon from './Icon.astro';
 interface Props {
   email: string;
+  class?: string;
 }
-const { email } = Astro.props;
+const { email, class: className = 'btn btn-ghost' } = Astro.props;
 ---
 
 <copy-email data-email={email}>
-  <button class="btn btn--ghost" type="button" hidden>
+  <button class={className} type="button" hidden>
     <span class="idle"><Icon name="copy" /> Copy email</span>
     <span class="done" hidden><Icon name="check" /> Copied</span>
   </button>
@@ -43,20 +44,24 @@ const { email } = Astro.props;
       });
     }
   }
-  customElements.define('copy-email', CopyEmail);
+  if (!customElements.get('copy-email')) customElements.define('copy-email', CopyEmail);
 </script>
 
 <style>
+  copy-email {
+    display: contents;
+  }
   span:not(.visually-hidden) {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.6em;
   }
-  span[hidden] {
+  span[hidden],
+  button[hidden] {
     display: none;
   }
   :global(copy-email svg) {
-    width: 1.05em;
-    height: 1.05em;
+    width: 1.15em;
+    height: 1.15em;
   }
 </style>

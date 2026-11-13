@@ -1,0 +1,416 @@
+---
+import SectionHead from '@/components/SectionHead.astro';
+import { site, type Release } from '@/data/site';
+import { formatRange, yearSpan } from '@/lib/dates';
+
+const pad = (n: number) => String(n).padStart(2, '0');
+
+const formatNote: Record<Release['format'], string> = {
+  LP: 'LP',
+  EP: 'EP',
+  Single: 'Single',
+  'Box set': `${site.experience.find((e) => e.discs)?.discs?.length ?? 3}-disc box set`,
+};
+
+const count = site.experience.length + 1;
+---
+
+<section id="experience" class="section" aria-labelledby="experience-title">
+  <div class="container">
+    <SectionHead id="experience-title" track="A2" label="Experience" title="The discography" meta={`${count} entries`}>
+      <p>Newest first: the marketing work up top, the plant-floor box set below, and the early demos at the end.</p>
+    </SectionHead>
+
+    <ol class="disco">
+      {
+        site.experience.map((r) => (
+          <li class="release" id={r.id}>
+            <p class="r-year mono">{yearSpan(r.start, r.end)}</p>
+
+            <div class:list={['mini', `p-${r.sleeve.pattern}`]} style={`--m-bg:${r.sleeve.bg};--m-fg:${r.sleeve.fg}`} aria-hidden="true">
+              <span class="display">{r.sleeve.mark}</span>
+            </div>
+
+            <div class="r-main">
+              <p class="r-chips">
+                <span class="chip">{formatNote[r.format]}</span>
+                {r.nowPlaying && r.end === null && (
+                  <span class="chip chip-live">
+                    <span class="eq loop">
+                      <i />
+                      <i />
+                      <i />
+                    </span>
+                    Now playing
+                  </span>
+                )}
+              </p>
+
+              <h3 class="r-role">{r.role}</h3>
+
+              <p class="r-org">
+                {r.url ? (
+                  <a href={r.url} rel="noopener" target="_blank">
+                    {r.org}
+                  </a>
+                ) : (
+                  r.org
+                )}
+                {r.orgNote && <span class="serif"> {r.orgNote}</span>}
+                <span class="r-sep" aria-hidden="true">
+                  /
+                </span>
+                {r.location}
+                <span class="r-sep" aria-hidden="true">
+                  /
+                </span>
+                <span class="mono">{formatRange(r.start, r.end)}</span>
+              </p>
+
+              {r.about && <p class="r-about">{r.about}</p>}
+
+              {r.bullets.length > 0 && (
+                <ol class="r-tracks">
+                  {r.bullets.map((b, i) => (
+                    <li>
+                      <span class="mono t-n" aria-hidden="true">
+                        {pad(i + 1)}
+                      </span>
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+
+              {r.discs && (
+                <div class="discs">
+                  {r.discs.map((d, i) => (
+                    <section class="disc-item" aria-label={`Disc ${i + 1}: ${d.role}`}>
+                      <p class="mono disc-no">Disc {i + 1}</p>
+                      <h4>{d.role}</h4>
+                      <p class="mono disc-dates">{formatRange(d.start, d.end)}</p>
+                      <ol class="r-tracks">
+                        {d.bullets.map((b, j) => (
+                          <li>
+                            <span class="mono t-n" aria-hidden="true">
+                              {pad(j + 1)}
+                            </span>
+                            <span>{b}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    </section>
+                  ))}
+                </div>
+              )}
+
+              {r.credit && <p class="r-credit serif">{r.credit}</p>}
+            </div>
+          </li>
+        ))
+      }
+
+      <li class="release bsides">
+        <p class="r-year mono">2019–21</p>
+        <div class="mini p-bsides" aria-hidden="true"><span class="display">B</span></div>
+        <div class="r-main">
+          <details>
+            <summary>
+              <span class="chip">B-sides &amp; rarities</span>
+              <span class="r-role">Earlier experience</span>
+              <span class="mono bs-hint">{site.earlier.length} tracks · show</span>
+            </summary>
+            <ol class="bs-list">
+              {
+                site.earlier.map((e) => (
+                  <li>
+                    <p class="bs-role">
+                      <strong>{e.role}</strong>, {e.org}
+                    </p>
+                    <p class="mono bs-when">
+                      {e.location} / {e.when}
+                    </p>
+                    <p class="bs-note">{e.note}</p>
+                  </li>
+                ))
+              }
+            </ol>
+          </details>
+        </div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<style>
+  .disco {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+
+  .release {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    gap: 1rem 1.25rem;
+    padding-block: clamp(1.75rem, 1.2rem + 1.8vw, 2.75rem);
+    border-bottom: 1px solid var(--line);
+  }
+
+  @media (min-width: 52rem) {
+    .release {
+      grid-template-columns: 5.5rem 6rem minmax(0, 1fr);
+      gap: 2rem;
+    }
+  }
+
+  .r-year {
+    grid-column: 1 / -1;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
+  @media (min-width: 52rem) {
+    .r-year {
+      grid-column: auto;
+      padding-top: 0.35rem;
+      font-size: 0.9rem;
+    }
+  }
+
+  /* ── Mini sleeves ── */
+  .mini {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+    aspect-ratio: 1;
+    padding: 0.45rem 0.5rem;
+    background-color: var(--m-bg);
+    color: var(--m-fg);
+    border-radius: 2px;
+    box-shadow: var(--shadow-sleeve);
+  }
+
+  .mini .display {
+    position: relative;
+    font-size: 1.7rem;
+    line-height: 0.8;
+    text-transform: none;
+  }
+
+  .p-rings {
+    background-image: repeating-radial-gradient(circle at 78% 22%, var(--m-fg) 0 1.2px, transparent 1.4px 7px);
+    background-blend-mode: normal;
+  }
+
+  .p-rings .display,
+  .p-dots .display,
+  .p-mesh .display {
+    padding: 0.1rem 0.25rem 0;
+    background: var(--m-bg);
+  }
+
+  .p-dots {
+    background-image: radial-gradient(var(--m-fg) 1.6px, transparent 1.9px);
+    background-size: 9px 9px;
+  }
+
+  .p-mesh {
+    background-image:
+      repeating-linear-gradient(45deg, var(--m-fg) 0 1px, transparent 1px 8px),
+      repeating-linear-gradient(-45deg, var(--m-fg) 0 1px, transparent 1px 8px);
+  }
+
+  .p-stack {
+    background-image: repeating-linear-gradient(45deg, var(--m-fg) 0 1px, transparent 1px 8px), repeating-linear-gradient(-45deg, var(--m-fg) 0 1px, transparent 1px 8px);
+    box-shadow:
+      5px -5px 0 -1px var(--paper),
+      5px -5px 0 0 var(--m-bg),
+      10px -10px 0 -1px var(--paper),
+      10px -10px 0 0 var(--m-bg),
+      var(--shadow-sleeve);
+    margin: 10px 10px 0 0;
+    width: calc(100% - 10px);
+  }
+
+  .p-stack .display {
+    padding: 0.1rem 0.25rem 0;
+    background: var(--m-bg);
+  }
+
+  .p-bsides {
+    background: var(--paper-2);
+    color: var(--muted);
+    border: 1px dashed var(--line);
+    box-shadow: none;
+  }
+
+  /* ── Main ── */
+  .r-main {
+    display: grid;
+    gap: 0.75rem;
+    align-content: start;
+  }
+
+  .r-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .r-role {
+    font-size: var(--step-2);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+
+  .r-org {
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+
+  .r-org a {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .r-org .serif {
+    font-size: 1.12em;
+    color: var(--muted);
+  }
+
+  .r-sep {
+    margin-inline: 0.45rem;
+    color: var(--line);
+  }
+
+  .r-org .mono {
+    font-size: 0.85rem;
+  }
+
+  .r-about {
+    max-width: 46rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .r-tracks {
+    display: grid;
+    gap: 0.55rem;
+    max-width: 48rem;
+    margin: 0.4rem 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--ink-2);
+  }
+
+  .r-tracks li {
+    display: grid;
+    grid-template-columns: 1.9rem minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+
+  .t-n {
+    padding-top: 0.2rem;
+    font-size: 0.75rem;
+    color: var(--red-ink);
+  }
+
+  .r-credit {
+    font-size: 1.15rem;
+    color: var(--muted);
+  }
+
+  .discs {
+    display: grid;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  @media (min-width: 70rem) {
+    .discs {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .disc-item {
+    display: grid;
+    gap: 0.4rem;
+    align-content: start;
+    padding: 1.1rem 1.15rem 1.25rem;
+    background: var(--card);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius);
+  }
+
+  .disc-no {
+    font-size: 0.72rem;
+    color: var(--red-ink);
+  }
+
+  .disc-item h4 {
+    font-size: 1.1rem;
+  }
+
+  .disc-dates {
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  .disc-item .r-tracks {
+    font-size: 0.93rem;
+  }
+
+  /* ── B-sides ── */
+  details summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem 0.9rem;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  details summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .bs-hint {
+    font-size: 0.78rem;
+    color: var(--red-ink);
+  }
+
+  details[open] .bs-hint {
+    visibility: hidden;
+  }
+
+  .bs-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: 1.5rem;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .bs-list li {
+    display: grid;
+    gap: 0.3rem;
+    align-content: start;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .bs-when {
+    font-size: 0.76rem;
+    color: var(--muted);
+  }
+
+  .bs-note {
+    color: var(--ink-2);
+    font-size: 0.95rem;
+  }
+</style>

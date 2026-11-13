@@ -67,6 +67,32 @@ export interface Credential {
   status: 'certified' | 'pressing';
 }
 
+export interface Recommendation {
+  /** Their name, as it appears on LinkedIn. */
+  name: string;
+  /** Their role in the capacity they worked with Gwido, e.g. 'Founder, Amarna'. */
+  role: string;
+  /** How they know Gwido, in plain words. Keep it consistent with the relationship they chose on LinkedIn. */
+  relationship: string;
+  /**
+   * Their words, word for word as published on LinkedIn, one string per
+   * paragraph. Never edit these on the site alone: if a quote here doesn't
+   * match LinkedIn, it reads as made up. The first paragraph is set as the lede.
+   */
+  paragraphs: string[];
+  /**
+   * A short excerpt for the hype sticker on the hero sleeve. Must appear word
+   * for word in `paragraphs` (case aside); the build fails if it doesn't.
+   */
+  sticker?: string;
+  /** 'YYYY-MM', matching the date LinkedIn shows. */
+  date: string;
+  /** Link to it on LinkedIn once it's published there; null hides the link. */
+  url: string | null;
+  /** Colours for their monogram. */
+  mark: { bg: string; fg: string };
+}
+
 export interface StudioItem {
   title: string;
   detail: string;
@@ -453,6 +479,32 @@ export const site = {
     { title: 'Experiential marketing event', note: 'Team project (Molson Coors case study): designed and ran an event to engage consumers and build brand awareness.' },
     { title: 'Pop’s Popcorn sales pitch', note: 'Created and presented a pitch showing customers why they’d succeed with our product over competitors.' },
   ],
+
+  /**
+   * A4 · On the record (recommendations). Unlike the rest of this file, these
+   * are other people's words, so Gwido doesn't rewrite them: they're quoted
+   * exactly as published on LinkedIn. Newest first. An empty list hides the
+   * section and the hero sticker.
+   */
+  recommendations: [
+    {
+      name: 'Andrew Gunn',
+      role: 'Founder, Amarna',
+      relationship: 'Mentor · worked with Gwido on Amarna Studio, Amarna Video and consulting work',
+      paragraphs: [
+        'Gwido has the kind of marketing instincts you can’t teach, and he pairs them with real curiosity about technology. That combination is rare this early in a marketing career.',
+        'I’ve known Gwido for years and have worked with him in different capacities while he’s been in school. Most recently, he helped me shape the UI and UX for Amarna Studio and Amarna Video, the AI products I’m building at Amarna. He’s creative, he has a sharp eye for detail and he knows what people like. His feedback always comes back to the people who will actually use the product.',
+        'He’s also my go-to second set of eyes in my consulting work. When I need a fresh perspective on something, I send it to Gwido, and what comes back is honest, thoughtful and useful.',
+        'Gwido has the intangibles of a good marketer, and he’s tech savvy to match. He’s finding inventive ways to put AI to work, and he isn’t content just using the tools. He wants to understand how they work.',
+        'If you’re building a team where marketing, design and technology meet, Gwido belongs on your shortlist. I recommend him without hesitation.',
+      ],
+      sticker: 'Marketing instincts you can’t teach',
+      date: '2026-11',
+      /** Paste the link once it's live: linkedin.com/in/gwido-ropas-263596235/details/recommendations/ */
+      url: null,
+      mark: { bg: '#2a47c0', fg: '#f2ead9' },
+    },
+  ] satisfies Recommendation[] as Recommendation[],
 
   /**
    * B3 · In the studio: what's being worked on right now. When something is

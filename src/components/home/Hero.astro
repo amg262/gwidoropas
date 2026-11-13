@@ -4,6 +4,7 @@ import Icon from '@/components/Icon.astro';
 import MotionToggle from '@/components/MotionToggle.astro';
 import { coverSvg, VENN } from '@/lib/cover';
 import { site, catalog } from '@/data/site';
+import { stickerQuote } from '@/lib/recommendations';
 
 /** "*word*" → <em>word</em>, each em tagged with its Venn ink. */
 const inks = ['ink-red', 'ink-cobalt', 'ink-mustard'];
@@ -58,6 +59,19 @@ const [first, ...rest] = site.name.split(' ');
             <span class="wide">{site.label.name}</span>
           </div>
         </div>
+
+        {
+          /* The hype sticker on the shrink-wrap: a pull quote from a recommendation, linking to the full text. */
+          stickerQuote && (
+            <a class="hype" href="#recommendations" aria-label={`Read ${stickerQuote.name}’s recommendation: “${stickerQuote.sticker}.”`}>
+              <span class="hype-in" aria-hidden="true">
+                <span class="wide hype-k">Recommended</span>
+                <span class="serif hype-q">“{stickerQuote.sticker}.”</span>
+                <span class="mono hype-by">{stickerQuote.name}</span>
+              </span>
+            </a>
+          )
+        }
       </div>
 
       <div class="hero-under">
@@ -262,6 +276,107 @@ const [first, ...rest] = site.name.split(' ');
   .hs-foot .wide {
     font-size: 2.3cqi;
     opacity: 0.8;
+  }
+
+  /* ── Hype sticker: stuck to the shrink-wrap over the sleeve's top-right corner ── */
+  .hype {
+    --hype-w: clamp(6rem, 20%, 9.25rem);
+    /* How much of the sticker sits on the sleeve; the rest hangs over the record. */
+    --hype-on: 0.8;
+    position: absolute;
+    z-index: 3;
+    top: -3%;
+    left: calc(70.4% - var(--hype-on) * var(--hype-w));
+    width: var(--hype-w);
+    aspect-ratio: 1;
+    container-type: inline-size;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #efe8da;
+    color: #16130f;
+    text-decoration: none;
+    rotate: 9deg;
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.5) inset,
+      0 10px 18px -10px rgb(0 0 0 / 0.55);
+    transition:
+      rotate 0.5s var(--ease),
+      scale 0.5s var(--ease);
+  }
+
+  /* Phones: smaller, and further onto the record so it clears the "Marketing" label. */
+  @media (max-width: 40rem) {
+    .hype {
+      --hype-w: 5.4rem;
+      --hype-on: 0.6;
+    }
+  }
+
+  /* A printed keyline just inside the edge, in label red. */
+  .hype::before {
+    content: '';
+    position: absolute;
+    inset: 5%;
+    border: 1.5px solid #e0452b;
+    border-radius: 50%;
+  }
+
+  .hype:hover,
+  .hype:focus-visible {
+    color: #16130f;
+    rotate: 2deg;
+    scale: 1.04;
+  }
+
+  .hype:focus-visible {
+    outline-offset: 4px;
+    border-radius: 50%;
+  }
+
+  .hype-in {
+    display: grid;
+    justify-items: center;
+    gap: 3cqi;
+    width: 72%;
+    text-align: center;
+  }
+
+  .hype-k {
+    font-size: 5.6cqi;
+    letter-spacing: 0.08em;
+    color: #b3321c;
+  }
+
+  .hype-q {
+    font-size: 11.5cqi;
+    line-height: 1.02;
+    text-wrap: balance;
+  }
+
+  .hype-by {
+    font-size: 6cqi;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* Too small to read the byline on phones; the quote and the link carry it. */
+  @container (max-width: 7.5rem) {
+    .hype-by {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hype {
+      transition: none;
+    }
+
+    .hype:hover,
+    .hype:focus-visible {
+      rotate: 9deg;
+      scale: 1;
+    }
   }
 
   .turntable :global(.hero-record) {

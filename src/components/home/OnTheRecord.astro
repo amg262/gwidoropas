@@ -1,0 +1,234 @@
+---
+/**
+ * A4 · On the record: recommendations, set like a review clipped from the
+ * music press. Quoted word for word from LinkedIn (see site.recommendations).
+ */
+import SectionHead from '@/components/SectionHead.astro';
+import Icon from '@/components/Icon.astro';
+import { recommendations, monogram } from '@/lib/recommendations';
+import { formatYm } from '@/lib/dates';
+
+const n = recommendations.length;
+---
+
+{
+  n > 0 && (
+    <section id="recommendations" class="section on-record" aria-labelledby="recommendations-title">
+      <div class="container">
+        <SectionHead id="recommendations-title" track="A4" label="Recommendations" title="On the record" meta={n === 1 ? '1 review' : `${n} reviews`}>
+          <p>In their words, not mine.</p>
+        </SectionHead>
+
+        <div class="reviews">
+          {recommendations.map((r) => {
+            const [lede, ...body] = r.paragraphs;
+            return (
+              <figure class="review">
+                <p class="rv-mast">
+                  <span class="wide">Recommendation</span>
+                  <span class="mono">
+                    {r.url && 'LinkedIn · '}
+                    {formatYm(r.date)}
+                  </span>
+                </p>
+
+                <blockquote class="rv-quote">
+                  <p class="serif rv-lede">
+                    <span class="rv-open" aria-hidden="true">
+                      “
+                    </span>
+                    {lede}
+                  </p>
+                  {body.length > 0 && (
+                    <div class="rv-body">
+                      {body.map((p) => (
+                        <p>{p}</p>
+                      ))}
+                    </div>
+                  )}
+                </blockquote>
+
+                <figcaption class="rv-by">
+                  <span class="rv-mark" style={`--mark-bg:${r.mark.bg};--mark-fg:${r.mark.fg}`} aria-hidden="true">
+                    <span class="display">{monogram(r.name)}</span>
+                  </span>
+                  <span class="rv-who">
+                    <span class="display rv-name">{r.name}</span>
+                    <span class="rv-role">{r.role}</span>
+                    <span class="rv-rel">{r.relationship}</span>
+                  </span>
+                  {r.url && (
+                    <a class="btn btn-ghost rv-link" href={r.url} target="_blank" rel="noopener">
+                      <Icon name="linkedin" /> Read it on LinkedIn
+                    </a>
+                  )}
+                </figcaption>
+              </figure>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .reviews {
+    display: grid;
+    gap: clamp(2rem, 1.5rem + 2vw, 3rem);
+  }
+
+  /* A clipping from the music press: card stock, a double-ruled masthead. */
+  .review {
+    padding: clamp(1.4rem, 0.8rem + 3vw, 3.5rem);
+    background: var(--card);
+    border-radius: 3px;
+    box-shadow: var(--shadow-sleeve);
+  }
+
+  .rv-mast {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 4px double var(--ink);
+  }
+
+  .rv-mast .mono {
+    color: var(--muted);
+    font-size: 0.74rem;
+    text-transform: uppercase;
+  }
+
+  /* Stacked on phones and tablets; the lede beside the column on wide screens. */
+  .rv-quote {
+    display: grid;
+    gap: clamp(1.75rem, 1.25rem + 1.5vw, 2.5rem);
+    margin: clamp(1.75rem, 1.25rem + 1.5vw, 2.5rem) 0 0;
+  }
+
+  @media (min-width: 64rem) {
+    .rv-quote {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      align-items: start;
+      column-gap: clamp(2.5rem, 1rem + 3vw, 4.5rem);
+    }
+  }
+
+  /* The big red quote mark sits in the room the padding leaves above the first line. */
+  .rv-lede {
+    position: relative;
+    max-width: 30ch;
+    padding-top: 0.95em;
+    font-size: clamp(1.75rem, 1.05rem + 2.5vw, 3rem);
+    line-height: 1.08;
+  }
+
+  .rv-open {
+    position: absolute;
+    top: 0;
+    left: -0.03em;
+    font-size: 2.3em;
+    line-height: 0.75;
+    color: var(--red);
+  }
+
+  /* Set as a newspaper column: justified, a hairline rule beside it. */
+  .rv-body {
+    columns: 2 18rem;
+    column-gap: 2.5rem;
+    column-rule: 1px solid var(--line);
+    color: var(--ink-2);
+    line-height: 1.65;
+    hyphens: auto;
+  }
+
+  @media (min-width: 40rem) {
+    .rv-body {
+      text-align: justify;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .rv-body {
+      columns: auto;
+      padding-left: clamp(2rem, 1rem + 2vw, 3rem);
+      border-left: 1px solid var(--line);
+    }
+  }
+
+  .rv-body p {
+    break-inside: avoid-column;
+  }
+
+  .rv-body p + p {
+    margin-top: 1em;
+  }
+
+  .rv-by {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 1rem 1.1rem;
+    margin-top: clamp(2rem, 1.5rem + 1.5vw, 2.75rem);
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+  }
+
+  @media (min-width: 46rem) {
+    .rv-by {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+  }
+
+  /* The reviewer's own little record: grooved vinyl, their initials on the label. */
+  .rv-mark {
+    display: grid;
+    place-items: center;
+    width: 3.6rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle, var(--mark-bg) 0 54%, transparent 55%),
+      repeating-radial-gradient(circle, rgb(255 255 255 / 0.07) 0 1px, transparent 1px 3px),
+      var(--vinyl);
+    box-shadow: 0 6px 14px -8px rgb(0 0 0 / 0.6);
+  }
+
+  .rv-mark .display {
+    color: var(--mark-fg);
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .rv-who {
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  .rv-name {
+    font-size: var(--step-2);
+  }
+
+  .rv-role {
+    font-weight: 600;
+  }
+
+  .rv-rel {
+    color: var(--muted);
+    font-size: var(--step--1);
+    line-height: 1.4;
+  }
+
+  .rv-link {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  @media (min-width: 46rem) {
+    .rv-link {
+      grid-column: auto;
+    }
+  }
+</style>

@@ -9,7 +9,11 @@
 name: Production check
 
 on:
-  deployment_status:
+  # This project's Vercel integration reports each deployment as a commit
+  # status (context "Vercel", "Deployment has completed"), not as a GitHub
+  # Deployment, so `status` is the post-deploy signal. GitHub runs status
+  # workflows from the default branch's copy of this file.
+  status:
   schedule:
     - cron: '23 11 * * *' # daily, 11:23 UTC
   workflow_dispatch:
@@ -20,21 +24,24 @@ permissions:
 jobs:
   contract:
     name: Live site honours the contract
-    # Vercel reports Preview deployments too; those sit behind Vercel's SSO
-    # protection, so only a successful Production deployment is tested.
+    # Only a successful Vercel deployment of a commit on main is production.
+    # Preview deployments (PRs, Dependabot) also post statuses, and every
+    # deployment posts a "pending" one first; those runs are skipped.
     if: >-
-      github.event_name != 'deployment_status' ||
-      (github.event.deployment_status.state == 'success' &&
-       github.event.deployment_status.environment == 'Production')
+      github.event_name != 'status' ||
+      (startsWith(github.event.context, 'Vercel') &&
+       github.event.state == 'success' &&
+       contains(github.event.branches.*.name, 'main'))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
       SITE_URL: ${{ vars.SITE_URL || 'https://www.gwidoropas.com' }}
     steps:
-      # On deployment_status this checks out the deployed commit, so the test
-      # compares production with the vercel.json that was just shipped.
+      # After a deploy, test against the vercel.json of the commit that was
+      # just deployed, not whatever main points at by the time this runs.
       - uses: actions/checkout@v6
         with:
+          ref: ${{ github.event.sha || github.sha }}
           persist-credentials: false
 
       - uses: actions/setup-node@v6

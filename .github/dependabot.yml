@@ -38,3 +38,9 @@ updates:
         patterns: ['@fontsource/*', '@fontsource-variable/*']
       images:
         patterns: ['satori', 'sharp']
+    ignore:
+      # @astrojs/check 0.9.x declares a peer dependency on TypeScript 5 or 6,
+      # so `npm ci` refuses TypeScript 7 (the new native compiler) with
+      # ERESOLVE. Remove this once @astrojs/check supports TypeScript 7.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']

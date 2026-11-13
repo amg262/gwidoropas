@@ -1,0 +1,669 @@
+---
+import Base from '@/layouts/Base.astro';
+import CaseCard from '@/components/CaseCard.astro';
+import Headline from '@/components/Headline.astro';
+import Icon from '@/components/Icon.astro';
+import CopyEmail from '@/components/CopyEmail.astro';
+import { site, initials } from '@/data/site';
+import { getWork, orderForHome } from '@/lib/work';
+
+const work = orderForHome(await getWork());
+---
+
+<Base>
+  <!-- ───────────── Hero ───────────── -->
+  <section class="hero">
+    <div class="container">
+      {
+        site.availability && (
+          <p class="status rise" style="--i:0">
+            <span class="dot" aria-hidden="true" />
+            {site.availability}
+          </p>
+        )
+      }
+      <h1 class="rise" style="--i:1">
+        <Headline text={site.hero.headline} />
+      </h1>
+      <div class="hero-foot">
+        <p class="intro rise" style="--i:2">{site.hero.intro}</p>
+        <div class="cta rise" style="--i:3">
+          <a class="btn" href="#work">See my work <Icon name="arrow-right" /></a>
+          <a class="btn btn--ghost" href={site.resume.href}>Résumé</a>
+        </div>
+      </div>
+
+      <dl class="highlights rise" style="--i:4">
+        {
+          site.highlights.map((h) => (
+            <div>
+              <dt>{h.label}</dt>
+              <dd>{h.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <!-- ───────────── Work ───────────── -->
+  <section class="section" id="work" aria-labelledby="work-title">
+    <div class="container">
+      <header class="section-head">
+        <span class="eyebrow">Selected work</span>
+        <h2 id="work-title">Case studies</h2>
+        <p>Real problems, the thinking behind the work, and the numbers at the end of it.</p>
+      </header>
+      <div class="work-grid">
+        {work.map((entry, i) => <CaseCard entry={entry} eager={i < 2} />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────── About ───────────── -->
+  <section class="section" id="about" aria-labelledby="about-title">
+    <div class="container about">
+      <div class="about-side">
+        {
+          site.about.photo ? (
+            <img class="portrait" src={site.about.photo} alt={`Portrait of ${site.name}`} width="480" height="600" loading="lazy" />
+          ) : (
+            <div class="portrait portrait--placeholder" aria-hidden="true">
+              <span>{initials}</span>
+            </div>
+          )
+        }
+      </div>
+      <div class="about-main">
+        <header class="section-head">
+          <span class="eyebrow">About</span>
+          <h2 id="about-title">Curious first, creative second, accountable always.</h2>
+        </header>
+        <div class="about-copy">
+          {site.about.paragraphs.map((p) => <p>{p}</p>)}
+        </div>
+        <ul class="strengths">
+          {
+            site.about.strengths.map((s, i) => (
+              <li>
+                <span class="num">0{i + 1}</span>
+                <h3>{s.title}</h3>
+                <p>{s.body}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────── Experience + Skills ───────────── -->
+  <section class="section" id="experience" aria-labelledby="exp-title">
+    <div class="container two-col">
+      <div>
+        <header class="section-head">
+          <span class="eyebrow">Experience</span>
+          <h2 id="exp-title">Where I’ve worked</h2>
+        </header>
+        <ol class="timeline">
+          {
+            site.experience.map((job) => (
+              <li>
+                <p class="when">
+                  {job.start} – {job.end}
+                </p>
+                <h3>{job.role}</h3>
+                <p class="org">
+                  {job.org} <span>· {job.orgType}</span>
+                </p>
+                <ul>
+                  {job.bullets.map((b) => (
+                    <li>{b}</li>
+                  ))}
+                </ul>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+
+      <div class="side-stack">
+        <div>
+          <header class="section-head small">
+            <span class="eyebrow">Toolkit</span>
+            <h2>Skills &amp; tools</h2>
+          </header>
+          <dl class="skills">
+            {
+              site.skills.map((g) => (
+                <div>
+                  <dt>{g.group}</dt>
+                  <dd>
+                    <ul class="tag-list">
+                      {g.items.map((s) => (
+                        <li class="tag">{s}</li>
+                      ))}
+                    </ul>
+                  </dd>
+                </div>
+              ))
+            }
+          </dl>
+        </div>
+
+        <div class="edu-card">
+          <h3>Education</h3>
+          <p class="school">{site.education.school}</p>
+          <p>{site.education.degree} · {site.education.graduation}</p>
+          <ul>
+            {site.education.details.map((d) => <li>{d}</li>)}
+          </ul>
+          <h3>Certifications</h3>
+          <ul class="certs">
+            {
+              site.certifications.map((c) => (
+                <li>
+                  <span>{c.name}</span>
+                  <span class="issuer">
+                    {c.issuer} · {c.year}
+                  </span>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────── Contact ───────────── -->
+  <section class="section contact" id="contact" aria-labelledby="contact-title">
+    <div class="container">
+      <span class="eyebrow">Contact</span>
+      <h2 id="contact-title">Let’s make something <em>people talk about.</em></h2>
+      <p class="contact-blurb">{site.contact.blurb}</p>
+      <div class="contact-actions">
+        <a class="btn" href={`mailto:${site.contact.email}`}><Icon name="mail" /> {site.contact.email}</a>
+        <CopyEmail email={site.contact.email} />
+      </div>
+      <ul class="socials">
+        {
+          site.social.map((s) => (
+            <li>
+              <a href={s.href} rel="me noopener" target="_blank">
+                {s.label} <Icon name="arrow-up-right" />
+              </a>
+            </li>
+          ))
+        }
+        <li>
+          <a href={site.resume.href}>Résumé <Icon name="arrow-right" /></a>
+        </li>
+      </ul>
+      <p class="location">{site.contact.location}</p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* Hero */
+  .hero {
+    padding-block: clamp(3.5rem, 2rem + 7vw, 8rem) clamp(3rem, 2rem + 4vw, 5rem);
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0.9rem 0.4rem 0.75rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--surface);
+    font-size: var(--step--1);
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+
+  .dot {
+    position: relative;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: var(--ok);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .dot::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: var(--ok);
+      animation: ping 2.2s var(--ease) infinite;
+    }
+
+    @keyframes ping {
+      75%,
+      100% {
+        transform: scale(2.6);
+        opacity: 0;
+      }
+    }
+  }
+
+  h1 {
+    margin-top: 1.75rem;
+    max-width: 16ch;
+    font-size: var(--step-5);
+    font-weight: 400;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+  }
+
+  h1 :global(em),
+  .contact h2 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+  }
+
+  .hero-foot {
+    display: grid;
+    gap: 2rem;
+    margin-top: clamp(1.75rem, 1rem + 2vw, 2.75rem);
+  }
+
+  @media (min-width: 56rem) {
+    .hero-foot {
+      grid-template-columns: minmax(0, 36rem) auto;
+      justify-content: space-between;
+      align-items: end;
+    }
+  }
+
+  .intro {
+    font-size: var(--step-1);
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .highlights {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: clamp(3rem, 2rem + 4vw, 5rem) 0 0;
+    border-top: 1px solid var(--line-strong);
+  }
+
+  @media (min-width: 48rem) {
+    .highlights {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .highlights > div {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.25rem;
+    padding: 1.25rem 1rem 0 0;
+  }
+
+  .highlights dt {
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  .highlights dd {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--step-4);
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  /* Work */
+  .work-grid {
+    display: grid;
+    gap: clamp(3rem, 2rem + 3vw, 4.5rem) clamp(1.5rem, 1rem + 2vw, 3rem);
+  }
+
+  @media (min-width: 52rem) {
+    .work-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* Stagger the second column for an editorial rhythm */
+    .work-grid > :global(:nth-child(even)) {
+      margin-top: 4.5rem;
+    }
+  }
+
+  /* About */
+  .about {
+    display: grid;
+    gap: clamp(2rem, 1rem + 4vw, 5rem);
+  }
+
+  @media (min-width: 56rem) {
+    .about {
+      grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.6fr);
+      align-items: start;
+    }
+
+    .about-side {
+      position: sticky;
+      top: 6rem;
+    }
+  }
+
+  .portrait {
+    width: 100%;
+    max-width: 22rem;
+    aspect-ratio: 4 / 5;
+    border-radius: var(--radius-lg);
+    object-fit: cover;
+  }
+
+  .portrait--placeholder {
+    display: none;
+    place-items: center;
+    background:
+      radial-gradient(100% 70% at 30% 20%, var(--accent-wash), transparent 70%),
+      var(--paper-2);
+    border: 1px solid var(--line);
+  }
+
+  @media (min-width: 56rem) {
+    .portrait--placeholder {
+      display: grid;
+    }
+  }
+
+  .portrait--placeholder span {
+    font-family: var(--font-display);
+    font-size: clamp(5rem, 4rem + 6vw, 9rem);
+    font-style: italic;
+    font-weight: 300;
+    color: var(--accent);
+    letter-spacing: -0.04em;
+  }
+
+  .about .section-head h2 {
+    font-size: var(--step-3);
+  }
+
+  .about-copy {
+    display: grid;
+    gap: 1.1rem;
+    max-width: 40rem;
+    color: var(--ink-2);
+    font-size: var(--step-1);
+    line-height: 1.55;
+  }
+
+  .strengths {
+    display: grid;
+    gap: 1px;
+    margin: 3rem 0 0;
+    padding: 0;
+    list-style: none;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  @media (min-width: 40rem) {
+    .strengths {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .strengths li {
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
+    padding: 1.5rem;
+    background: var(--surface);
+  }
+
+  .strengths .num {
+    font-family: var(--font-display);
+    font-style: italic;
+    color: var(--accent-ink);
+  }
+
+  .strengths h3 {
+    font-size: var(--step-1);
+  }
+
+  .strengths p {
+    font-size: var(--step--1);
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* Experience & skills */
+  .two-col {
+    display: grid;
+    gap: clamp(3.5rem, 2rem + 4vw, 5rem);
+  }
+
+  @media (min-width: 60rem) {
+    .two-col {
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    }
+  }
+
+  .two-col .section-head h2 {
+    font-size: var(--step-3);
+  }
+
+  .timeline {
+    display: grid;
+    gap: 2.25rem;
+    margin: 0;
+    padding: 0 0 0 1.5rem;
+    list-style: none;
+    border-left: 1px solid var(--line-strong);
+  }
+
+  .timeline > li {
+    position: relative;
+    display: grid;
+    gap: 0.3rem;
+  }
+
+  .timeline > li::before {
+    content: '';
+    position: absolute;
+    left: calc(-1.5rem - 5px);
+    top: 0.45rem;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 2px solid var(--accent);
+  }
+
+  .when {
+    font-size: var(--step--1);
+    font-weight: 600;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .timeline h3 {
+    font-size: var(--step-1);
+  }
+
+  .org {
+    font-weight: 500;
+  }
+
+  .org span {
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .timeline ul {
+    margin: 0.4rem 0 0;
+    padding-left: 1.1rem;
+    color: var(--ink-2);
+    font-size: 0.97em;
+  }
+
+  .timeline ul li + li {
+    margin-top: 0.3rem;
+  }
+
+  .side-stack {
+    display: grid;
+    gap: 3rem;
+    align-content: start;
+  }
+
+  .section-head.small {
+    margin-bottom: 1.75rem;
+  }
+
+  .skills {
+    display: grid;
+    gap: 1.25rem;
+    margin: 0;
+  }
+
+  .skills dt {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+
+  .skills dd {
+    margin: 0;
+  }
+
+  .edu-card {
+    display: grid;
+    gap: 0.4rem;
+    padding: 1.75rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+
+  .edu-card h3 {
+    font-size: var(--step--1);
+    font-family: var(--font-body);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .edu-card h3:not(:first-child) {
+    margin-top: 1.25rem;
+  }
+
+  .school {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    line-height: 1.1;
+  }
+
+  .edu-card ul {
+    margin: 0.25rem 0 0;
+    padding-left: 1.1rem;
+    color: var(--ink-2);
+    font-size: var(--step--1);
+  }
+
+  .certs {
+    display: grid;
+    gap: 0.6rem;
+    list-style: none;
+    padding: 0 !important;
+  }
+
+  .certs li {
+    display: grid;
+    font-size: var(--step-0);
+    color: var(--ink);
+  }
+
+  .issuer {
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  /* Contact */
+  .contact {
+    text-align: left;
+  }
+
+  .contact h2 {
+    margin-top: 1.25rem;
+    max-width: 14ch;
+    font-size: var(--step-5);
+    font-weight: 400;
+    letter-spacing: -0.035em;
+  }
+
+  .contact-blurb {
+    margin-top: 1.5rem;
+    max-width: 36rem;
+    font-size: var(--step-1);
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+
+  .contact-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2.25rem;
+  }
+
+  .contact-actions .btn {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.75rem;
+    margin: 2.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .socials a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: var(--step-1);
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .socials a:hover {
+    color: var(--accent-ink);
+  }
+
+  .socials :global(svg) {
+    width: 1em;
+    height: 1em;
+    color: var(--muted);
+  }
+
+  .location {
+    margin-top: 2rem;
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+</style>

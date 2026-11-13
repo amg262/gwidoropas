@@ -1,5 +1,5 @@
 ---
-import { Font } from 'astro:assets';
+import { Font, getImage } from 'astro:assets';
 import Analytics from '@vercel/analytics/astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
@@ -27,12 +27,15 @@ const fullTitle = title ? `${title} · ${site.name}` : site.title;
 const canonical = canonicalUrl(Astro.url, Astro.site);
 const ogImageUrl = new URL(ogImage, Astro.site);
 const current = site.experience.find((e) => e.end === null && e.nowPlaying);
+// A plain JPEG for crawlers and knowledge panels (they don't all read AVIF).
+const portrait = site.portrait ? await getImage({ src: site.portrait.src, format: 'jpg', width: site.portrait.src.width }) : null;
 
 const personLd = {
   '@context': 'https://schema.org',
   '@type': 'Person',
   name: site.name,
   url: Astro.site?.href,
+  image: portrait ? new URL(portrait.src, Astro.site).href : undefined,
   email: `mailto:${site.contact.email}`,
   jobTitle: current ? current.role.split(',')[0] : site.headline,
   worksFor: current ? { '@type': 'Organization', name: current.org, url: current.url } : undefined,

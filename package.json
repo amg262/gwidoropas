@@ -8,7 +8,12 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "astro": "astro"
+    "astro": "astro",
+    "smoke": "node scripts/smoke.mjs",
+    "docker:build": "docker build -t gwidoropas:local .",
+    "docker:run": "docker run --rm -p 8080:8080 --read-only --tmpfs /tmp --cap-drop=ALL --security-opt no-new-privileges gwidoropas:local",
+    "version:next": "node scripts/next-version.mjs",
+    "readme:portrait": "node scripts/readme-portrait.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",

@@ -1,0 +1,16 @@
+# Allowlist: ignore everything, then let back in only what the build needs.
+# Keeps the context small and makes it impossible to bake in .env files, the
+# résumé .docx files, node_modules from your machine or the .git directory.
+*
+
+!package.json
+!package-lock.json
+!astro.config.mjs
+!tsconfig.json
+!vercel.json
+!src/
+!public/
+!scripts/
+!deploy/
+
+**/.DS_Store

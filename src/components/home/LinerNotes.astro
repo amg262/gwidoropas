@@ -1,6 +1,7 @@
 ---
+import { Picture } from 'astro:assets';
 import SectionHead from '@/components/SectionHead.astro';
-import { site, PLANT_START } from '@/data/site';
+import { site, PLANT_START, catalog } from '@/data/site';
 import { yearsSince } from '@/lib/dates';
 
 const pressing = site.education.credentials;
@@ -16,7 +17,29 @@ const stats = [
   <div class="container">
     <SectionHead id="about-title" track="A1" label="About" title="Liner notes" meta="Side A" />
 
-    <div class="liner-grid">
+    <div class:list={['liner-grid', { 'has-portrait': site.portrait }]}>
+      {
+        site.portrait && (
+          <figure class="portrait">
+            <div class="portrait-print">
+              <Picture
+                src={site.portrait.src}
+                alt={site.portrait.alt}
+                formats={['avif', 'webp']}
+                widths={[240, 360, site.portrait.src.width]}
+                sizes="(min-width: 36rem) 18rem, 80vw"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <figcaption class="portrait-cap mono">
+              <span>The artist</span>
+              <span>{catalog(1)} · Back cover</span>
+            </figcaption>
+          </figure>
+        )
+      }
+
       <figure class="pull">
         <span class="pull-mark serif" aria-hidden="true">“</span>
         <blockquote class="serif">{site.about.pullQuote}</blockquote>
@@ -64,6 +87,92 @@ const stats = [
       grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
       align-items: start;
     }
+  }
+
+  /*
+   * With a portrait, the section is laid out like the back of an LP: the photo
+   * and the pull quote side by side, the liner notes running underneath in
+   * three columns. Without one, it falls back to quote | notes above.
+   */
+  @media (min-width: 48rem) {
+    .liner-grid.has-portrait {
+      grid-template-columns: 18rem minmax(0, 1fr);
+      grid-template-areas:
+        'photo quote'
+        'notes notes';
+      align-items: end;
+      column-gap: clamp(2.5rem, 1rem + 4vw, 5.5rem);
+    }
+
+    .has-portrait .portrait {
+      grid-area: photo;
+    }
+
+    .has-portrait .pull {
+      grid-area: quote;
+      max-width: 42rem;
+      /* Sits level with the photo's caption rule. */
+      padding-bottom: 0.4rem;
+    }
+
+    .has-portrait .liner-text {
+      grid-area: notes;
+      columns: 3 16rem;
+      padding-top: clamp(1rem, 0.5rem + 1.5vw, 2rem);
+    }
+  }
+
+  /* ── The back-cover photo ── */
+  .portrait {
+    width: min(100%, 18rem);
+  }
+
+  /* Stacked (phones): room for the oversized quote mark, which hangs above the quote. */
+  @media (max-width: 47.99rem) {
+    .has-portrait .portrait {
+      margin-bottom: 1.5rem;
+    }
+  }
+
+  /* Printed onto the sleeve: square, hairline ink keyline, sleeve shadow. */
+  .portrait-print {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: var(--paper-2);
+    border-radius: 2px;
+    box-shadow: var(--shadow-sleeve);
+  }
+
+  .portrait-print :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .portrait-print::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border: 1px solid rgb(22 19 15 / 0.18);
+    border-radius: inherit;
+    /* The same light edge as the hero sleeve, so it reads as card stock. */
+    background: linear-gradient(90deg, rgb(255 255 255 / 0.07), transparent 3%, transparent 96%, rgb(0 0 0 / 0.18));
+  }
+
+  .portrait-cap {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.85rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
   }
 
   .pull {

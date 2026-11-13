@@ -1,0 +1,62 @@
+---
+import Icon from './Icon.astro';
+interface Props {
+  email: string;
+}
+const { email } = Astro.props;
+---
+
+<copy-email data-email={email}>
+  <button class="btn btn--ghost" type="button" hidden>
+    <span class="idle"><Icon name="copy" /> Copy email</span>
+    <span class="done" hidden><Icon name="check" /> Copied</span>
+  </button>
+  <span class="visually-hidden" aria-live="polite"></span>
+</copy-email>
+
+<script>
+  // Progressive enhancement: the button only appears when the Clipboard API exists.
+  class CopyEmail extends HTMLElement {
+    connectedCallback() {
+      const button = this.querySelector('button');
+      const live = this.querySelector('[aria-live]');
+      const idle = this.querySelector<HTMLElement>('.idle');
+      const done = this.querySelector<HTMLElement>('.done');
+      const email = this.dataset.email;
+      if (!button || !email || !navigator.clipboard) return;
+
+      button.hidden = false;
+      button.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(email);
+          if (idle) idle.hidden = true;
+          if (done) done.hidden = false;
+          if (live) live.textContent = 'Email address copied to clipboard';
+          setTimeout(() => {
+            if (idle) idle.hidden = false;
+            if (done) done.hidden = true;
+            if (live) live.textContent = '';
+          }, 2000);
+        } catch {
+          window.location.href = `mailto:${email}`;
+        }
+      });
+    }
+  }
+  customElements.define('copy-email', CopyEmail);
+</script>
+
+<style>
+  span:not(.visually-hidden) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  span[hidden] {
+    display: none;
+  }
+  :global(copy-email svg) {
+    width: 1.05em;
+    height: 1.05em;
+  }
+</style>

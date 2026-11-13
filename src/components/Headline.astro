@@ -1,0 +1,9 @@
+---
+/** Renders a string where *wrapped words* become accent-coloured italics. */
+interface Props {
+  text: string;
+}
+const parts = Astro.props.text.split(/(\*[^*]+\*)/g).filter(Boolean);
+---
+
+{parts.map((p) => (p.startsWith('*') && p.endsWith('*') ? <em>{p.slice(1, -1)}</em> : p))}

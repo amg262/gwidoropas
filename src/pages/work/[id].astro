@@ -1,0 +1,309 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { render } from 'astro:content';
+import Base from '@/layouts/Base.astro';
+import Cover from '@/components/Cover.astro';
+import Icon from '@/components/Icon.astro';
+import { site } from '@/data/site';
+import { getWork, formatMonth, canonicalUrl, type Work } from '@/lib/work';
+
+export const getStaticPaths = (async () => {
+  const work = await getWork();
+  return work.map((entry, i) => ({
+    params: { id: entry.id },
+    props: { entry, next: work[(i + 1) % work.length] },
+  }));
+}) satisfies GetStaticPaths;
+
+interface Props {
+  entry: Work;
+  next: Work;
+}
+
+const { entry, next } = Astro.props;
+const { title, summary, client, context, role, date, duration, tags, tools, metrics, accent, cover, coverAlt } = entry.data;
+const { Content } = await render(entry);
+
+const articleLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CreativeWork',
+  name: title,
+  abstract: summary,
+  dateCreated: date.toISOString().slice(0, 10),
+  author: { '@type': 'Person', name: site.name, url: Astro.site?.href },
+  keywords: tags.join(', '),
+  url: canonicalUrl(Astro.url, Astro.site).href,
+};
+
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site?.href },
+    { '@type': 'ListItem', position: 2, name: 'Work', item: new URL('/#work', Astro.site).href },
+    { '@type': 'ListItem', position: 3, name: title },
+  ],
+};
+---
+
+<Base title={title} description={summary} ogImage={`/og/work/${entry.id}.png`} ogType="article" jsonLd={[articleLd, breadcrumbLd]}>
+  <article>
+    <header class="container case-head">
+      <a class="back link-arrow" href="/#work"><Icon name="arrow-left" /> All work</a>
+      <p class="eyebrow">{context} · {formatMonth(date)}</p>
+      <h1>{title}</h1>
+      <p class="lede">{summary}</p>
+      <ul class="tag-list" aria-label="Disciplines">
+        {tags.map((t) => <li class="tag">{t}</li>)}
+      </ul>
+    </header>
+
+    <div class="container">
+      <Cover seed={entry.id} accent={accent} metric={metrics[0]} cover={cover} coverAlt={coverAlt} size="hero" eager />
+    </div>
+
+    <section class="container results" aria-labelledby="results-title">
+      <h2 id="results-title" class="visually-hidden">Results at a glance</h2>
+      <dl class="metrics" style={`--c: ${accent}`}>
+        {
+          metrics.map((m) => (
+            <div>
+              <dt>{m.label}</dt>
+              <dd>{m.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </section>
+
+    <div class="container case-body">
+      <aside class="facts" aria-label="Project details">
+        <dl>
+          <div><dt>Client</dt><dd>{client}</dd></div>
+          <div><dt>My role</dt><dd>{role}</dd></div>
+          <div><dt>Timeline</dt><dd>{duration}</dd></div>
+          {
+            tools.length > 0 && (
+              <div>
+                <dt>Tools</dt>
+                <dd>{tools.join(', ')}</dd>
+              </div>
+            )
+          }
+        </dl>
+      </aside>
+      <div class="prose">
+        <Content />
+      </div>
+    </div>
+  </article>
+
+  <nav class="container next" aria-label="Next case study">
+    {
+      next.id !== entry.id && (
+        <a href={`/work/${next.id}`} class="next-link">
+          <span class="eyebrow">Next case study</span>
+          <span class="next-title">{next.data.title}</span>
+          <span class="link-arrow">
+            Read it <Icon name="arrow-right" />
+          </span>
+        </a>
+      )
+    }
+    <div class="next-cta">
+      <p>Like what you see?</p>
+      <a class="btn" href="/#contact">Get in touch <Icon name="arrow-right" /></a>
+    </div>
+  </nav>
+</Base>
+
+<style>
+  .case-head {
+    display: grid;
+    gap: 1.1rem;
+    justify-items: start;
+    padding-block: clamp(2rem, 1rem + 4vw, 4rem) clamp(2rem, 1rem + 3vw, 3rem);
+  }
+
+  .back {
+    margin-bottom: 1rem;
+  }
+
+  .back :global(svg) {
+    width: 1.05em;
+    height: 1.05em;
+  }
+
+  h1 {
+    max-width: 22ch;
+    font-size: var(--step-4);
+    font-weight: 400;
+    letter-spacing: -0.03em;
+  }
+
+  .lede {
+    max-width: 44rem;
+    font-size: var(--step-1);
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+
+  .results {
+    margin-top: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    gap: 1px;
+    margin: 0;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .metrics > div {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+    gap: 0.4rem;
+    padding: 1.5rem 1.5rem 1.6rem;
+    background: var(--surface);
+  }
+
+  .metrics dd {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--step-4);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+
+  .metrics dt {
+    color: var(--muted);
+    font-size: var(--step--1);
+    line-height: 1.4;
+  }
+
+  .case-body {
+    display: grid;
+    gap: 2.5rem;
+    padding-block: clamp(3rem, 2rem + 3vw, 5rem);
+  }
+
+  @media (min-width: 60rem) {
+    .case-body {
+      grid-template-columns: 15rem minmax(0, 1fr);
+      gap: 5rem;
+    }
+
+    .facts {
+      position: sticky;
+      top: 6rem;
+      align-self: start;
+    }
+  }
+
+  .facts dl {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: 1.25rem;
+    margin: 0;
+  }
+
+  @media (min-width: 60rem) {
+    .facts dl {
+      grid-template-columns: 1fr;
+      padding-top: 1.5rem;
+      border-top: 2px solid var(--ink);
+    }
+  }
+
+  .facts dt {
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .facts dd {
+    margin: 0.2rem 0 0;
+    font-size: 0.97rem;
+  }
+
+  .prose :global(h2:first-child) {
+    margin-top: 0;
+  }
+
+  .next {
+    display: grid;
+    gap: 1.5rem;
+    padding-bottom: clamp(4rem, 3rem + 4vw, 6rem);
+  }
+
+  @media (min-width: 52rem) {
+    .next {
+      grid-template-columns: 1.6fr 1fr;
+    }
+  }
+
+  .next-link,
+  .next-cta {
+    display: grid;
+    gap: 0.9rem;
+    align-content: start;
+    padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+
+  .next-link {
+    text-decoration: none;
+    transition:
+      border-color 0.25s var(--ease),
+      transform 0.25s var(--ease);
+  }
+
+  .next-link:hover {
+    border-color: var(--ink);
+    transform: translateY(-2px);
+  }
+
+  .next-title {
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .next-cta {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+    justify-items: start;
+  }
+
+  .next-cta p {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+  }
+
+  .next-cta .btn {
+    --btn-bg: var(--paper);
+    --btn-fg: var(--ink);
+  }
+
+  .next-cta .btn:hover {
+    --btn-bg: var(--accent);
+    --btn-fg: #fff;
+  }
+
+  .link-arrow :global(svg) {
+    width: 1.05em;
+    height: 1.05em;
+  }
+</style>

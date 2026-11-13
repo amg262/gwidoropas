@@ -1,0 +1,120 @@
+---
+import { site, initials } from '@/data/site';
+
+const path = Astro.url.pathname;
+const links = [
+  { href: '/#work', label: 'Work', match: '/work' },
+  { href: '/#about', label: 'About' },
+  { href: site.resume.href, label: 'Résumé', match: '/resume' },
+  { href: '/#contact', label: 'Contact' },
+];
+---
+
+<header class="site-header">
+  <div class="container bar">
+    <a class="brand" href="/" aria-label={`${site.name}, home`}>
+      <span class="mark" aria-hidden="true">{initials}</span>
+      <span class="brand-name">{site.name}</span>
+    </a>
+    <nav aria-label="Primary">
+      <ul>
+        {
+          links.map((l) => (
+            <li>
+              <a href={l.href} aria-current={l.match && path.startsWith(l.match) ? 'page' : undefined}>
+                {l.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: color-mix(in srgb, var(--paper) 82%, transparent);
+    backdrop-filter: saturate(1.4) blur(14px);
+    -webkit-backdrop-filter: saturate(1.4) blur(14px);
+    border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+    view-transition-name: site-header;
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 4rem;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    text-decoration: none;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .mark {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    transition: background-color 0.25s var(--ease);
+  }
+
+  .brand:hover .mark {
+    background: var(--accent);
+  }
+
+  nav ul {
+    display: flex;
+    gap: clamp(0.15rem, 0.5vw, 0.5rem);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  nav a {
+    display: inline-block;
+    padding: 0.5rem 0.7rem;
+    border-radius: 999px;
+    color: var(--ink-2);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition:
+      background-color 0.2s var(--ease),
+      color 0.2s var(--ease);
+  }
+
+  nav a:hover,
+  nav a[aria-current='page'] {
+    background: var(--paper-2);
+    color: var(--ink);
+  }
+
+  @media (max-width: 34rem) {
+    .brand-name {
+      display: none;
+    }
+
+    nav a {
+      padding: 0.5rem 0.55rem;
+      font-size: 0.9rem;
+    }
+  }
+</style>

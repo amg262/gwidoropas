@@ -1,0 +1,200 @@
+---
+import SectionHead from '@/components/SectionHead.astro';
+import { site, PLANT_START } from '@/data/site';
+import { yearsSince } from '@/lib/dates';
+
+const pressing = site.education.credentials;
+const stats = [
+  { value: `${yearsSince(PLANT_START)}+`, label: 'Years inside a B2B manufacturer' },
+  { value: '2', label: 'AI products I market at Amarna' },
+  { value: '3', label: 'Private events for Peyton Pours' },
+  { value: String(pressing.filter((c) => c.status === 'certified').length), label: 'Marketing credentials from WCTC' },
+];
+---
+
+<section id="about" class="section liner" aria-labelledby="about-title">
+  <div class="container">
+    <SectionHead id="about-title" track="A1" label="About" title="Liner notes" meta="Side A" />
+
+    <div class="liner-grid">
+      <figure class="pull">
+        <span class="pull-mark serif" aria-hidden="true">“</span>
+        <blockquote class="serif">{site.about.pullQuote}</blockquote>
+        <figcaption class="wide">{site.name}</figcaption>
+      </figure>
+
+      <div class="liner-text">
+        {site.about.paragraphs.map((p) => <p>{p}</p>)}
+      </div>
+    </div>
+
+    <dl class="stats">
+      {
+        stats.map((s) => (
+          <div>
+            <dt>{s.label}</dt>
+            <dd class="display">{s.value}</dd>
+          </div>
+        ))
+      }
+    </dl>
+
+    <ol class="hooks" aria-label="Three things to know">
+      {
+        site.about.hooks.map((h, i) => (
+          <li>
+            <p class="mono hook-no">Hook {i + 1}</p>
+            <h3 class="display">{h.title}</h3>
+            <p>{h.body}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .liner-grid {
+    display: grid;
+    gap: clamp(2rem, 1rem + 4vw, 5rem);
+  }
+
+  @media (min-width: 60rem) {
+    .liner-grid {
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      align-items: start;
+    }
+  }
+
+  .pull {
+    position: relative;
+    padding-top: 2.4rem;
+  }
+
+  .pull-mark {
+    position: absolute;
+    top: -2.2rem;
+    left: -0.4rem;
+    font-size: 9rem;
+    line-height: 1;
+    color: var(--red);
+  }
+
+  .pull blockquote {
+    position: relative;
+    font-size: clamp(1.8rem, 1.1rem + 2.4vw, 3rem);
+    line-height: 1.08;
+  }
+
+  .pull figcaption {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    color: var(--muted);
+  }
+
+  .pull figcaption::before {
+    content: '';
+    width: 2rem;
+    height: 1.5px;
+    background: currentColor;
+  }
+
+  /* Set like the back of an LP: narrow, justified columns. */
+  .liner-text {
+    columns: 2 17rem;
+    column-gap: 2.5rem;
+    column-rule: 1px solid var(--line);
+    color: var(--ink-2);
+    font-size: 1rem;
+    line-height: 1.65;
+    text-align: justify;
+    hyphens: auto;
+  }
+
+  .liner-text p {
+    break-inside: avoid-column;
+  }
+
+  .liner-text p + p {
+    margin-top: 1em;
+  }
+
+  .liner-text p:first-child::first-letter {
+    float: left;
+    margin: 0.06em 0.1em 0 0;
+    font-family: var(--font-sans), sans-serif;
+    font-stretch: 62%;
+    font-weight: 800;
+    font-size: 3.9em;
+    line-height: 0.8;
+    color: var(--ink);
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+    margin: clamp(3.5rem, 2rem + 4vw, 6rem) 0 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .stats > div {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    padding: 1.6rem 1.25rem 1.6rem 0;
+  }
+
+  @media (min-width: 48rem) {
+    .stats > div + div {
+      padding-left: 1.5rem;
+      border-left: 1px solid var(--line);
+    }
+  }
+
+  .stats dd {
+    margin: 0;
+    font-size: clamp(3.6rem, 2.4rem + 4vw, 6rem);
+    line-height: 0.85;
+  }
+
+  .stats dt {
+    max-width: 14rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+
+  .hooks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    gap: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+    margin: clamp(2.5rem, 2rem + 2vw, 4rem) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .hooks li {
+    display: grid;
+    gap: 0.6rem;
+    align-content: start;
+    padding-top: 1rem;
+    border-top: 3px solid var(--ink);
+  }
+
+  .hook-no {
+    font-size: 0.74rem;
+    color: var(--red-ink);
+  }
+
+  .hooks h3 {
+    font-size: var(--step-3);
+  }
+
+  .hooks p:last-child {
+    color: var(--ink-2);
+  }
+</style>

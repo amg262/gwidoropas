@@ -1,0 +1,21 @@
+---
+/** Track number + plain label (for skimmers) + poster title (for the vibe). */
+interface Props {
+  id: string;
+  track: string;
+  label: string;
+  title: string;
+  /** Right-hand meta on the track line, e.g. a count. */
+  meta?: string;
+}
+const { id, track, label, title, meta } = Astro.props;
+---
+
+<header class="sec-head">
+  <p class="track">
+    <span><span class="track-no">{track}</span><span class="wide">{label}</span></span>
+    {meta && <span class="mono">{meta}</span>}
+  </p>
+  <h2 class="display" id={id}>{title}</h2>
+  {Astro.slots.has('default') && <div class="lede"><slot /></div>}
+</header>

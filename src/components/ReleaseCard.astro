@@ -1,0 +1,150 @@
+---
+import Sleeve from './Sleeve.astro';
+import Record from './Record.astro';
+import type { Work } from '@/lib/work';
+import { uid } from '@/lib/uid';
+import { site } from '@/data/site';
+
+interface Props {
+  entry: Work;
+  headingLevel?: 'h3' | 'h2';
+}
+
+const { entry, headingLevel: H = 'h3' } = Astro.props;
+const d = entry.data;
+const lead = d.metrics[0]!;
+---
+
+<article class="card">
+  <a class="card-link" href={`/work/${entry.id}`}>
+    <div class="card-art">
+      <Record class="card-record" uid={uid('cr')} ring={`${site.label.name} · ${d.album} · `} center={d.catalog} labelBg={d.cover.accent} labelFg={d.cover.bg} />
+      <Sleeve
+        class="card-sleeve"
+        spec={{ ...d.cover, seed: entry.id }}
+        album={d.album}
+        catalog={d.catalog}
+        sticker={d.status === 'recording' ? 'Now recording' : undefined}
+        image={d.coverImage}
+        imageAlt={d.coverAlt}
+      />
+    </div>
+
+    <div class="card-meta">
+      <p class="mono card-cat">
+        {d.catalog} · {d.context}{d.released && ` · ${d.released}`}
+      </p>
+      <H class="card-title">{d.title}</H>
+      <p class="card-summary">{d.summary}</p>
+      <p class="card-metric">
+        <span class="display">{lead.value}</span>
+        <span>{lead.label}</span>
+      </p>
+      <span class="link-arrow card-cta">Play the release <span aria-hidden="true">→</span></span>
+    </div>
+  </a>
+</article>
+
+<style>
+  .card-link {
+    display: grid;
+    gap: 1.4rem;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .card-link:hover {
+    color: inherit;
+  }
+
+  .card-art {
+    position: relative;
+    width: 82%;
+  }
+
+  .card-art :global(.card-sleeve) {
+    position: relative;
+    z-index: 2;
+    transition: transform 0.5s var(--ease);
+  }
+
+  .card-art :global(.card-record) {
+    position: absolute;
+    top: 3%;
+    left: 3%;
+    width: 94%;
+    z-index: 1;
+    transform: translateX(14%);
+    transition: transform 0.6s var(--ease);
+  }
+
+  .card-art :global(.card-record .disc) {
+    animation: spin var(--spin) linear infinite;
+    animation-play-state: paused;
+  }
+
+  .card-link:hover :global(.card-record),
+  .card-link:focus-visible :global(.card-record) {
+    transform: translateX(22%);
+  }
+
+  .card-link:hover :global(.card-record .disc),
+  .card-link:focus-visible :global(.card-record .disc) {
+    animation-play-state: running;
+  }
+
+  .card-link:hover :global(.card-sleeve) {
+    transform: translateY(-4px) rotate(-0.6deg);
+  }
+
+  .card-meta {
+    display: grid;
+    gap: 0.6rem;
+    align-content: start;
+  }
+
+  .card-cat {
+    font-size: 0.76rem;
+    color: var(--muted);
+  }
+
+  .card-title {
+    font-size: var(--step-2);
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+  }
+
+  .card-link:hover .card-title {
+    text-decoration: underline;
+    text-decoration-color: var(--red);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.15em;
+  }
+
+  .card-summary {
+    color: var(--ink-2);
+    font-size: 0.97rem;
+  }
+
+  .card-metric {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-top: 0.4rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  .card-metric .display {
+    font-size: 2.4rem;
+    line-height: 0.85;
+    color: var(--ink);
+  }
+
+  .card-cta {
+    margin-top: 0.4rem;
+    color: var(--red-ink);
+  }
+</style>

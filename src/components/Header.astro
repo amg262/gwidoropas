@@ -1,33 +1,43 @@
 ---
-import { site, initials } from '@/data/site';
+import LabelMark from './LabelMark.astro';
+import { site } from '@/data/site';
 
 const path = Astro.url.pathname;
+const onHome = path === '/' || path === '/index' || path === '/index.html';
+const base = onHome ? '' : '/';
+
 const links = [
-  { href: '/#work', label: 'Work', match: '/work' },
-  { href: '/#about', label: 'About' },
-  { href: site.resume.href, label: 'Résumé', match: '/resume' },
-  { href: '/#contact', label: 'Contact' },
+  { href: `${base}#experience`, track: 'A2', label: 'Experience' },
+  { href: `${base}#work`, track: 'A3', label: 'Work', match: '/work' },
+  { href: `${base}#skills`, track: 'B1', label: 'Skills' },
+  { href: `${base}#education`, track: 'B2', label: 'Education' },
+  { href: `${base}#contact`, track: 'B4', label: 'Contact' },
 ];
 ---
 
 <header class="site-header">
   <div class="container bar">
     <a class="brand" href="/" aria-label={`${site.name}, home`}>
-      <span class="mark" aria-hidden="true">{initials}</span>
-      <span class="brand-name">{site.name}</span>
+      <LabelMark size="2.35rem" />
+      <span class="brand-text">
+        <span class="wide brand-label">{site.label.name}</span>
+        <span class="mono brand-name">{site.name}</span>
+      </span>
     </a>
     <nav aria-label="Primary">
-      <ul>
+      <ul class="tracks">
         {
           links.map((l) => (
             <li>
               <a href={l.href} aria-current={l.match && path.startsWith(l.match) ? 'page' : undefined}>
-                {l.label}
+                <span class="mono t-no">{l.track}</span>
+                <span class="t-label">{l.label}</span>
               </a>
             </li>
           ))
         }
       </ul>
+      <a class="btn resume-btn" href={site.resume.href} aria-current={path.startsWith('/resume') ? 'page' : undefined}>Résumé</a>
     </nav>
   </div>
 </header>
@@ -37,11 +47,10 @@ const links = [
     position: sticky;
     top: 0;
     z-index: 50;
-    background: color-mix(in srgb, var(--paper) 82%, transparent);
-    backdrop-filter: saturate(1.4) blur(14px);
-    -webkit-backdrop-filter: saturate(1.4) blur(14px);
-    border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
-    view-transition-name: site-header;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: saturate(1.3) blur(12px);
+    -webkit-backdrop-filter: saturate(1.3) blur(12px);
+    border-bottom: 1px solid var(--line);
   }
 
   .bar {
@@ -49,72 +58,83 @@ const links = [
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    min-height: 4rem;
+    min-height: 4.25rem;
   }
 
   .brand {
     display: inline-flex;
     align-items: center;
-    gap: 0.65rem;
+    gap: 0.7rem;
     text-decoration: none;
-    font-weight: 600;
-    letter-spacing: -0.01em;
+    color: var(--ink);
   }
 
-  .mark {
+  .brand :global(.label-mark) {
+    transition: transform 0.6s var(--ease);
+  }
+
+  .brand:hover :global(.label-mark) {
+    transform: rotate(-35deg);
+  }
+
+  .brand-text {
     display: grid;
-    place-items: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 50%;
-    background: var(--ink);
-    color: var(--paper);
-    font-family: var(--font-display);
-    font-size: 0.95rem;
-    font-weight: 600;
-    letter-spacing: 0;
-    transition: background-color 0.25s var(--ease);
+    gap: 0.15rem;
   }
 
-  .brand:hover .mark {
-    background: var(--accent);
+  .brand-label {
+    font-size: 0.72rem;
   }
 
-  nav ul {
+  .brand-name {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  nav {
     display: flex;
-    gap: clamp(0.15rem, 0.5vw, 0.5rem);
+    align-items: center;
+    gap: clamp(0.75rem, 0.2rem + 1.4vw, 1.75rem);
+  }
+
+  .tracks {
+    display: none;
+    gap: clamp(0.5rem, 0.1rem + 1vw, 1.5rem);
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
-  nav a {
-    display: inline-block;
-    padding: 0.5rem 0.7rem;
-    border-radius: 999px;
-    color: var(--ink-2);
-    font-size: 0.95rem;
-    font-weight: 500;
+  @media (min-width: 62rem) {
+    .tracks {
+      display: flex;
+    }
+  }
+
+  .tracks a {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    padding: 0.4rem 0.1rem;
     text-decoration: none;
-    transition:
-      background-color 0.2s var(--ease),
-      color 0.2s var(--ease);
+    font-size: 0.9rem;
+    font-weight: 500;
   }
 
-  nav a:hover,
-  nav a[aria-current='page'] {
-    background: var(--paper-2);
-    color: var(--ink);
+  .t-no {
+    font-size: 0.68rem;
+    color: var(--red-ink);
   }
 
-  @media (max-width: 34rem) {
-    .brand-name {
-      display: none;
-    }
+  .tracks a:hover .t-label,
+  .tracks a[aria-current='page'] .t-label {
+    text-decoration: underline;
+    text-decoration-color: var(--red);
+    text-decoration-thickness: 2px;
+  }
 
-    nav a {
-      padding: 0.5rem 0.55rem;
-      font-size: 0.9rem;
-    }
+  .resume-btn {
+    min-height: 2.5rem;
+    padding: 0.7em 1.15em;
   }
 </style>

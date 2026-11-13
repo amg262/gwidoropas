@@ -1,0 +1,42 @@
+---
+/** The Ropas Records mark: a record label, seen from above. */
+import { site, initials } from '@/data/site';
+import { uid as makeUid } from '@/lib/uid';
+
+interface Props {
+  size?: string;
+  class?: string;
+}
+const { size = '2.4rem', class: className } = Astro.props;
+const uid = makeUid('lm');
+const ring = `${site.label.name} · ${site.label.city} · `.toUpperCase();
+---
+
+<svg class:list={['label-mark', className]} viewBox="0 0 100 100" style={`width:${size};height:${size}`} aria-hidden="true" focusable="false">
+  <defs>
+    <path id={uid} d="M50,50 m-36,0 a36,36 0 1,1 72,0 a36,36 0 1,1 -72,0"></path>
+  </defs>
+  <circle cx="50" cy="50" r="49" fill="var(--lm-bg, var(--red))"></circle>
+  <text class="lm-ring" fill="var(--lm-fg, #16130f)">
+    <textPath href={`#${uid}`} textLength="224" lengthAdjust="spacing">{ring}</textPath>
+  </text>
+  <circle cx="50" cy="50" r="26" fill="none" stroke="var(--lm-fg, #16130f)" stroke-width="1.2"></circle>
+  <text class="lm-mono" x="50" y="58" text-anchor="middle" fill="var(--lm-fg, #16130f)">{initials}</text>
+</svg>
+
+<style>
+  .label-mark {
+    flex: none;
+  }
+  .lm-ring {
+    font-family: var(--font-mono), monospace;
+    font-size: 9.2px;
+    font-weight: 500;
+  }
+  .lm-mono {
+    font-family: var(--font-sans), sans-serif;
+    font-stretch: 62%;
+    font-weight: 800;
+    font-size: 25px;
+  }
+</style>

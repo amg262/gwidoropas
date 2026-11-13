@@ -1,58 +1,130 @@
 ---
-import { site } from '@/data/site';
-const year = new Date().getFullYear();
+import LabelMark from './LabelMark.astro';
+import { site, linkedin } from '@/data/site';
+import { formatPressing, BUILD_DATE } from '@/lib/dates';
+import { getWork } from '@/lib/work';
+
+const work = await getWork();
+const year = BUILD_DATE.getFullYear();
 ---
 
-<footer class="site-footer">
-  <div class="container foot">
-    <p>© {year} {site.name}</p>
-    <ul class="foot-links">
-      <li><a href={`mailto:${site.contact.email}`}>Email</a></li>
-      {
-        site.social.map((s) => (
-          <li>
-            <a href={s.href} rel="me noopener" target="_blank">
-              {s.label}
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-    <a class="top" href="#main">Back to top ↑</a>
+<footer class="site-footer band">
+  <div class="container">
+    <div class="f-top">
+      <div class="f-brand">
+        <LabelMark size="4.5rem" />
+        <p class="display f-name">{site.label.name}</p>
+        <p class="serif f-motto">Marketing, technology &amp; design, pressed in Wisconsin.</p>
+      </div>
+
+      <nav class="f-cols" aria-label="Footer">
+        <div>
+          <p class="wide f-h">Booking</p>
+          <ul>
+            <li><a href={`mailto:${site.contact.email}`}>{site.contact.email}</a></li>
+            {linkedin && <li><a href={linkedin.href} rel="me noopener" target="_blank">LinkedIn ↗</a></li>}
+            <li><a href={site.resume.href}>Résumé</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="wide f-h">Catalogue</p>
+          <ul>
+            {
+              work.map((w) => (
+                <li>
+                  <a href={`/work/${w.id}`}>
+                    <span class="mono">{w.data.catalog}</span> {w.data.album}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </nav>
+    </div>
+
+    <div class="f-fine mono">
+      <p>℗ &amp; © {year} {site.name}. All rights reserved.</p>
+      <p>This pressing: {formatPressing()}</p>
+      <p>{site.label.name} is an imaginary label. The work is real.</p>
+    </div>
   </div>
 </footer>
 
 <style>
   .site-footer {
-    border-top: 1px solid var(--line);
-    padding-block: 2rem;
-    color: var(--muted);
-    font-size: var(--step--1);
+    padding-block: clamp(3.5rem, 2.5rem + 4vw, 6rem) 2rem;
   }
 
-  .foot {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem 2rem;
+  .f-top {
+    display: grid;
+    gap: 3rem;
+    padding-bottom: 3rem;
+    border-bottom: 1px solid var(--band-line);
   }
 
-  .foot-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1.25rem;
+  @media (min-width: 52rem) {
+    .f-top {
+      grid-template-columns: 1.2fr 1fr;
+      align-items: end;
+    }
+  }
+
+  .f-brand {
+    display: grid;
+    gap: 1.1rem;
+    justify-items: start;
+  }
+
+  .f-name {
+    font-size: var(--step-5);
+  }
+
+  .f-motto {
+    font-size: var(--step-2);
+    color: var(--band-muted);
+  }
+
+  .f-cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: 2rem;
+  }
+
+  .f-h {
+    margin-bottom: 0.9rem;
+    color: var(--band-muted);
+  }
+
+  .f-cols ul {
+    display: grid;
+    gap: 0.5rem;
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
-  a {
+  .f-cols a {
     text-decoration: none;
   }
 
-  a:hover {
-    color: var(--ink);
-    text-decoration: underline;
+  .f-cols a:hover {
+    color: var(--mustard);
+  }
+
+  .f-cols .mono {
+    color: var(--band-muted);
+    font-size: 0.78rem;
+    margin-right: 0.35rem;
+  }
+
+  .f-fine {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 2rem;
+    padding-top: 1.5rem;
+    font-size: 0.74rem;
+    color: var(--band-muted);
   }
 </style>

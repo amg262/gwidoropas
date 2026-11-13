@@ -1,0 +1,145 @@
+---
+import SectionHead from '@/components/SectionHead.astro';
+import { site } from '@/data/site';
+
+const STAGES = [
+  { name: 'Writing', plain: 'planned' },
+  { name: 'Tracking', plain: 'in progress' },
+  { name: 'Mixing', plain: 'finishing up' },
+  { name: 'Mastered', plain: 'done' },
+] as const;
+---
+
+{
+  site.studio.length > 0 && (
+    <section id="studio" class="section" aria-labelledby="studio-title">
+      <div class="container">
+        <SectionHead id="studio-title" track="B3" label="In progress" title="In the studio" meta="Live session">
+          <p>What I’m working on right now. When a take is mastered, it moves up into the record proper.</p>
+        </SectionHead>
+
+        <ol class="takes">
+          {site.studio.map((s, i) => {
+            const stage = STAGES[s.stage - 1]!;
+            return (
+              <li class="take">
+                <p class="mono take-no">Take {String(i + 1).padStart(2, '0')}</p>
+                <div class="take-main">
+                  <h3>{s.title}</h3>
+                  <p>{s.detail}</p>
+                </div>
+                <div class="take-meter">
+                  <div class="meter" aria-hidden="true">
+                    {STAGES.map((_, j) => (
+                      <span class:list={['seg', { on: j < s.stage, live: j === s.stage - 1 && s.stage < 4 }]} />
+                    ))}
+                  </div>
+                  <p class="mono take-stage">
+                    <span class="stage-name">{stage.name}</span> · {stage.plain}
+                    {s.eta && <> · ETA {s.eta}</>}
+                  </p>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .takes {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+
+  .take {
+    display: grid;
+    gap: 0.75rem 2rem;
+    padding-block: 1.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  @media (min-width: 52rem) {
+    .take {
+      grid-template-columns: 6rem minmax(0, 1fr) 17rem;
+      align-items: center;
+    }
+  }
+
+  .take-no {
+    font-size: 0.78rem;
+    color: var(--red-ink);
+  }
+
+  .take-main h3 {
+    font-size: var(--step-1);
+    line-height: 1.2;
+  }
+
+  .take-main p {
+    margin-top: 0.3rem;
+    color: var(--ink-2);
+  }
+
+  .take-meter {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .meter {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    padding: 4px;
+    background: var(--ink);
+    border-radius: 3px;
+  }
+
+  .seg {
+    height: 0.65rem;
+    border-radius: 1px;
+    background: color-mix(in srgb, var(--paper) 14%, transparent);
+  }
+
+  .seg.on {
+    background: var(--mustard);
+  }
+
+  .seg.on:nth-child(4) {
+    background: var(--red);
+  }
+
+  .seg.live {
+    animation: led 1.4s ease-in-out infinite;
+  }
+
+  @keyframes led {
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .seg.live {
+      animation: none;
+    }
+  }
+
+  :global(html[data-motion='paused']) .seg.live {
+    animation: none;
+  }
+
+  .take-stage {
+    font-size: 0.76rem;
+    color: var(--muted);
+  }
+
+  .stage-name {
+    color: var(--ink);
+    text-transform: uppercase;
+  }
+</style>

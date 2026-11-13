@@ -3,7 +3,7 @@ import { Font } from 'astro:assets';
 import Analytics from '@vercel/analytics/astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
-import { site } from '@/data/site';
+import { site, linkedin } from '@/data/site';
 import { canonicalUrl } from '@/lib/work';
 import '@/styles/global.css';
 
@@ -19,19 +19,12 @@ interface Props {
   noindex?: boolean;
 }
 
-const {
-  title,
-  description = site.description,
-  ogImage = '/og/home.png',
-  ogType = 'website',
-  jsonLd = [],
-  noindex = false,
-} = Astro.props;
+const { title, description = site.description, ogImage = '/og/home.png', ogType = 'website', jsonLd = [], noindex = false } = Astro.props;
 
 const fullTitle = title ? `${title} · ${site.name}` : site.title;
 const canonical = canonicalUrl(Astro.url, Astro.site);
 const ogImageUrl = new URL(ogImage, Astro.site);
-const sameAs = site.social.map((s) => s.href);
+const current = site.experience.find((e) => e.end === null && e.nowPlaying);
 
 const personLd = {
   '@context': 'https://schema.org',
@@ -39,14 +32,17 @@ const personLd = {
   name: site.name,
   url: Astro.site?.href,
   email: `mailto:${site.contact.email}`,
-  jobTitle: 'Marketing Student',
-  alumniOf: { '@type': 'CollegeOrUniversity', name: site.education.school },
-  knowsAbout: site.skills.flatMap((g) => g.items).slice(0, 12),
-  sameAs,
+  jobTitle: current ? current.role.split(',')[0] : site.headline,
+  worksFor: current ? { '@type': 'Organization', name: current.org, url: current.url } : undefined,
+  address: { '@type': 'PostalAddress', addressLocality: site.location.city, addressRegion: site.location.region, addressCountry: 'US' },
+  alumniOf: { '@type': 'CollegeOrUniversity', name: 'Waukesha County Technical College' },
+  knowsAbout: site.skills.flatMap((g) => g.credits.map((c) => c.name)).slice(0, 14),
+  sameAs: site.social.map((s) => s.href),
 };
 
 const structuredData = [personLd, ...jsonLd];
 const ga4 = site.analytics.ga4;
+const hideFromSearch = noindex || site.advanceCopy;
 ---
 
 <!doctype html>
@@ -57,13 +53,26 @@ const ga4 = site.analytics.ga4;
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    {noindex && <meta name="robots" content="noindex" />}
+    {hideFromSearch && <meta name="robots" content="noindex" />}
 
-    <meta name="theme-color" content="#f6f2ea" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#13110e" media="(prefers-color-scheme: dark)" />
+    <!-- Start the turntable paused for reduced-motion users (or whoever paused it last). Runs before paint. -->
+    <script is:inline>
+      (function () {
+        var m = null;
+        try {
+          m = localStorage.getItem('motion');
+        } catch (e) {}
+        if (!m) m = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'paused' : 'playing';
+        document.documentElement.dataset.motion = m;
+      })();
+    </script>
+
+    <meta name="theme-color" content="#efe8da" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#12100d" media="(prefers-color-scheme: dark)" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="sitemap" href="/sitemap-index.xml" />
+    {linkedin && <link rel="me" href={linkedin.href} />}
 
     <!-- Open Graph / LinkedIn / iMessage / Slack previews -->
     <meta property="og:type" content={ogType} />
@@ -74,12 +83,13 @@ const ga4 = site.analytics.ga4;
     <meta property="og:image" content={ogImageUrl} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content={title ?? site.title} />
+    <meta property="og:image:alt" content={title ? `${title}, a release by ${site.name}` : `${site.name}: ${site.headline}`} />
     <meta property="og:locale" content={site.locale.replace('-', '_')} />
     <meta name="twitter:card" content="summary_large_image" />
 
-    <Font cssVariable="--font-display" preload={[{ style: 'normal', subset: 'latin' }]} />
-    <Font cssVariable="--font-body" preload={[{ style: 'normal', subset: 'latin' }]} />
+    <Font cssVariable="--font-sans" preload={[{ style: 'normal', subset: 'latin' }]} />
+    <Font cssVariable="--font-serif" preload={[{ style: 'italic', subset: 'latin' }]} />
+    <Font cssVariable="--font-mono" />
 
     {structuredData.map((data) => <script is:inline type="application/ld+json" set:html={JSON.stringify(data)} />)}
 
@@ -102,10 +112,15 @@ const ga4 = site.analytics.ga4;
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     {
-      site.isTemplate && (
-        <aside class="template-banner" aria-label="Template notice">
-          <strong>Template content.</strong> The name, projects and numbers on this site are placeholders. Edit{' '}
-          <code>src/data/site.ts</code> and <code>src/content/work/</code> to make it yours.
+      site.advanceCopy && (
+        <aside class="promo-strip" aria-label="Draft notice">
+          <div class="promo-run mono">
+            <span>Advance promo copy</span>
+            <span aria-hidden="true">✦</span>
+            <span>Not for sale</span>
+            <span aria-hidden="true">✦</span>
+            <span>Words pending the artist’s approval</span>
+          </div>
         </aside>
       )
     }
@@ -119,25 +134,26 @@ const ga4 = site.analytics.ga4;
 </html>
 
 <style>
-  .template-banner {
-    padding: 0.55rem var(--gutter);
-    background: var(--ink);
-    color: var(--paper);
-    font-size: var(--step--1);
+  .promo-strip {
+    background: var(--mustard);
+    color: #16130f;
+    border-bottom: 1px solid #16130f;
+  }
+
+  .promo-run {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.25rem 0.9rem;
+    padding: 0.45rem var(--gutter);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
     text-align: center;
-    line-height: 1.4;
   }
 
-  .template-banner code {
-    font-size: 0.95em;
-    padding: 0.05em 0.35em;
-    border-radius: 4px;
-    background: rgb(255 255 255 / 0.14);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .template-banner code {
-      background: rgb(0 0 0 / 0.12);
-    }
+  :global(html:not([data-motion]) .motion-toggle) {
+    display: none;
   }
 </style>

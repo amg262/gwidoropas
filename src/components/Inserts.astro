@@ -1,0 +1,284 @@
+---
+/**
+ * Inserts: real pieces of the work, tucked in after the tracks the way a
+ * printed insert comes inside a record sleeve. Kept deliberately small (the
+ * prose column, two up) so they sit inside the story instead of taking it
+ * over; each opens full size on click.
+ *
+ * Built to degrade: without JavaScript each card is a plain link to the
+ * full-size image. The inline script upgrades the links to open a native
+ * <dialog> instead (Escape, the close button or a click outside closes it,
+ * and focus returns to the card).
+ */
+import { Image, getImage } from 'astro:assets';
+import type { Work } from '@/lib/work';
+
+interface Props {
+  inserts: NonNullable<Work['data']['inserts']>;
+  class?: string;
+}
+
+const { inserts, class: className } = Astro.props;
+const ROMAN = ['I', 'II', 'III', 'IV'];
+
+const items = await Promise.all(
+  inserts.items.map(async (it) => ({
+    ...it,
+    full: await getImage({ src: it.image, width: Math.min(it.image.width, 1200), format: 'webp' }),
+  })),
+);
+---
+
+<section id="inserts" class:list={['inserts', className]} aria-labelledby="inserts-title" data-inserts>
+  <h2 id="inserts-title" class="ins-title"><span class="mono ins-no">Inserts</span> {inserts.title}</h2>
+  <p class="ins-intro">{inserts.intro}</p>
+
+  <ul class="ins-list">
+    {
+      items.map((it, i) => (
+        <li>
+          <figure class="ins-fig">
+            <a class="ins-card" href={it.full.src} data-insert data-w={it.full.attributes.width} data-h={it.full.attributes.height}>
+              <Image src={it.image} alt={it.alt} widths={[320, 640]} sizes="(min-width: 62rem) 19rem, 44vw" />
+              <span class="visually-hidden"> (opens full size)</span>
+            </a>
+            <figcaption>
+              <span class="mono ins-cap-no">Insert {ROMAN[i]}</span>
+              <span class="wide ins-name">{it.name}</span>
+              {it.note && <span class="ins-note">{it.note}</span>}
+            </figcaption>
+          </figure>
+        </li>
+      ))
+    }
+  </ul>
+
+  {inserts.credit && <p class="mono ins-credit">{inserts.credit}</p>}
+
+  <dialog class="ins-dialog" aria-label="Insert, full size">
+    <form method="dialog">
+      <button class="ins-close" type="submit" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+      </button>
+    </form>
+    <img class="ins-full" alt="" decoding="async" />
+  </dialog>
+</section>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('[data-inserts]');
+    var dialog = root && root.querySelector('dialog');
+    if (!dialog || typeof dialog.showModal !== 'function') return;
+    var img = dialog.querySelector('img');
+    root.addEventListener('click', function (e) {
+      var link = e.target.closest('[data-insert]');
+      if (!link || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+      e.preventDefault();
+      var thumb = link.querySelector('img');
+      img.width = Number(link.dataset.w);
+      img.height = Number(link.dataset.h);
+      img.alt = thumb ? thumb.alt : '';
+      img.src = link.href;
+      dialog.showModal();
+    });
+    // A click on the backdrop lands on the <dialog> itself.
+    dialog.addEventListener('click', function (e) {
+      if (e.target === dialog) dialog.close();
+    });
+  })();
+</script>
+
+<style>
+  .inserts {
+    max-width: 40rem;
+    margin-top: clamp(3.5rem, 2.5rem + 3vw, 5.5rem);
+  }
+
+  /* Matches the prose track headings, with "Inserts" where the track number goes. */
+  .ins-title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--line);
+    color: var(--ink);
+    font-family: var(--font-serif), Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: var(--step-3);
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+
+  .ins-no {
+    flex: none;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 0.8rem;
+    color: var(--red-ink);
+    transform: translateY(-0.35em);
+  }
+
+  .ins-intro {
+    margin-top: 1.1em;
+    color: var(--ink-2);
+    line-height: 1.7;
+  }
+
+  /* Two up, even on a phone: small enough to stay an aside, and a tap opens them. */
+  .ins-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
+    gap: 1.75rem clamp(1rem, 0.5rem + 2.5vw, 2.25rem);
+    margin: 1.9rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ins-list li {
+    max-width: 19rem;
+  }
+
+  .ins-fig {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  /* Printed card stock, each set down at its own slight angle. */
+  .ins-card {
+    display: block;
+    overflow: hidden;
+    border-radius: 2px;
+    box-shadow: var(--shadow-sleeve);
+    rotate: -1.2deg;
+    transition:
+      rotate 0.5s var(--ease),
+      translate 0.5s var(--ease);
+    cursor: zoom-in;
+  }
+
+  .ins-list li:nth-child(even) .ins-card {
+    rotate: 1deg;
+  }
+
+  .ins-card:hover,
+  .ins-card:focus-visible {
+    rotate: 0deg;
+    translate: 0 -4px;
+  }
+
+  .ins-card img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+  }
+
+  .ins-fig figcaption {
+    display: grid;
+    gap: 0.3rem;
+  }
+
+  .ins-cap-no {
+    font-size: 0.72rem;
+    color: var(--red-ink);
+  }
+
+  .ins-name {
+    color: var(--ink);
+  }
+
+  .ins-note {
+    color: var(--muted);
+    font-size: var(--step--1);
+    line-height: 1.5;
+  }
+
+  .ins-credit {
+    margin-top: 1.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--line-soft);
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  /* ── Full size ── */
+  .ins-dialog {
+    max-width: none;
+    max-height: none;
+    margin: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    overflow: visible;
+  }
+
+  .ins-dialog::backdrop {
+    background: rgb(14 13 11 / 0.86);
+  }
+
+  .ins-dialog[open] {
+    animation: ins-in 0.35s var(--ease);
+  }
+
+  @keyframes ins-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+    }
+  }
+
+  .ins-full {
+    width: auto;
+    height: auto;
+    max-width: min(92vw, 60rem);
+    max-height: 90dvh;
+    border-radius: 2px;
+    box-shadow: 0 30px 60px -20px rgb(0 0 0 / 0.8);
+  }
+
+  .ins-close {
+    position: absolute;
+    top: -0.9rem;
+    right: -0.9rem;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #efe8da;
+    color: #16130f;
+    box-shadow: 0 6px 14px -6px rgb(0 0 0 / 0.6);
+  }
+
+  .ins-close svg {
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+
+  @media (max-width: 40rem) {
+    .ins-close {
+      top: 0.6rem;
+      right: 0.6rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ins-card {
+      transition: none;
+    }
+    .ins-dialog[open] {
+      animation: none;
+    }
+  }
+
+  @media print {
+    .ins-dialog {
+      display: none;
+    }
+  }
+</style>

@@ -42,6 +42,7 @@ Every line must be something Gwido has done or can talk about for two minutes in
 - [ ] **Tabal Chocolate:** say exactly which parts were yours (team of 3), and add the term it ran. See the comment block at the top of `src/content/work/tabal-chocolate-pr-campaign.md`.
 - [ ] **Molson Coors:** confirm the brief, the course, and whether $1.0M was given or derived. Make sure you can defend every change in the Remaster.
 - [ ] **Peyton Pours:** confirm which menu and brand pieces were yours. Wording stays at "co-designed" and "supported." Add photos.
+- [ ] **Cousins Beach menus:** check with Peyton that she's happy for her two menu directions to appear as inserts on the Peyton Pours release with the credit *Art direction by Peyton Ropas · Co-design by Gwido Ropas*, and that "co-design" is right for both. They print the hosts' first names, as her own site does.
 - [ ] **In the studio:** update each item's `stage` (1–4) as the HubSpot and GA certifications and the two automations progress.
 - [ ] **Photo:** confirm Gwido is happy with the back-cover photo (`src/assets/portrait/gwido-ropas.jpg`). The current file is 483 px; a 1000 px+ square original will look sharper on retina screens. After swapping it, run `npm run readme:portrait` to re-press the README image.
 - [ ] **Real cover art (optional):** add `coverImage` to any release.
@@ -102,6 +103,8 @@ One Markdown file per project. The filename becomes the URL. The frontmatter is 
 Each release follows the structure the launch plan asks for: **the brief → what I did → the result → the remaster** (what I'd do differently, the part interviewers remember). The remaster is structured data (`remaster.changes[]`, each pairing the original with the v2), not prose, so it always gets its signature treatment.
 
 Cover art is generated from `cover.style` (`stripes`, `halftone`, `ripples`, `bars`, `venn`) and three colours. Or set `coverImage` to a real image.
+
+Real pieces of the work (a menu, a poster, a screen) go in `inserts`, like the printed inserts tucked inside a record sleeve. Put the images in `src/content/work/images/`. They show small, two up, after the last track (with a tracklist entry), and open full size on click. Their top edges also peek out of the sleeve on the home page wall and the release's header. Credit anyone else's work in `inserts.credit`. The Peyton Pours release carries two of the Cousins Beach menus.
 
 ---
 

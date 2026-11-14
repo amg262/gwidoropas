@@ -76,6 +76,33 @@ const work = defineCollection({
       /** Optional real cover image (relative path). Replaces the generated art. */
       coverImage: image().optional(),
       coverAlt: z.string().optional(),
+      /**
+       * Inserts: real pieces of the work (a menu, a poster, a screen), tucked in
+       * like the printed inserts that come inside a record sleeve. They show small
+       * on the case study and open full size on click, and their top edges peek
+       * out of the sleeve on the home page wall. Images are relative paths, e.g.
+       * ./images/menu.jpg. Credit other people's work in `credit`.
+       */
+      inserts: z
+        .object({
+          title: z.string().max(60),
+          intro: z.string().max(320),
+          credit: z.string().optional(),
+          items: z
+            .array(
+              z.object({
+                image: image(),
+                /** Describe what's on it for screen readers. */
+                alt: z.string().min(1),
+                /** A short name, e.g. "Cyanotype". */
+                name: z.string().max(28),
+                note: z.string().max(140).optional(),
+              }),
+            )
+            .min(1)
+            .max(4),
+        })
+        .optional(),
       draft: z.boolean().default(false),
     }),
 });

@@ -1,0 +1,109 @@
+---
+/**
+ * Lights: the light/dark switch. A little record, half cream and half black,
+ * that turns over when you flip it.
+ *
+ * It starts from the visitor's system setting. Choosing the other side is
+ * remembered (localStorage "theme"); choosing your system's side again forgets
+ * the choice, so the site follows the system from then on. Base.astro applies a
+ * saved choice before paint, so there's no flash of the wrong theme.
+ */
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<button type="button" class:list={['theme-toggle', className]} data-theme-toggle aria-pressed="false" title="Switch to dark mode">
+  <svg class="tt-disc" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="10.25" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
+    <path d="M12 1.75a10.25 10.25 0 0 1 0 20.5z" fill="currentColor"></path>
+    <circle cx="12" cy="12" r="3.1" fill="var(--red)"></circle>
+    <circle cx="12" cy="12" r="0.9" fill="var(--paper)"></circle>
+  </svg>
+  <span class="visually-hidden">Dark mode</span>
+</button>
+
+<script>
+  const root = document.documentElement;
+  const systemDark = matchMedia('(prefers-color-scheme: dark)');
+  const PAPER = { light: '#efe8da', dark: '#12100d' };
+
+  const system = () => (systemDark.matches ? 'dark' : 'light');
+  const current = () => (root.dataset.theme === 'light' || root.dataset.theme === 'dark' ? root.dataset.theme : system());
+
+  /** Keep every switch, and the browser chrome colour, in step with the page. */
+  function sync() {
+    const dark = current() === 'dark';
+    document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((b) => {
+      b.setAttribute('aria-pressed', String(dark));
+      b.title = dark ? 'Switch to light mode' : 'Switch to dark mode';
+    });
+    document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((m) => {
+      const scheme = root.dataset.theme ?? (m.media.includes('dark') ? 'dark' : 'light');
+      m.content = PAPER[scheme === 'dark' ? 'dark' : 'light'];
+    });
+  }
+
+  function set(next: 'light' | 'dark') {
+    try {
+      if (next === system()) localStorage.removeItem('theme');
+      else localStorage.setItem('theme', next);
+    } catch {
+      /* private mode: fine, it just won't persist */
+    }
+    if (next === system()) delete root.dataset.theme;
+    else root.dataset.theme = next;
+    sync();
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const next = current() === 'dark' ? 'light' : 'dark';
+      // A soft cross-fade, like the house lights going down, where it's supported and welcome.
+      const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (document.startViewTransition && !calm) document.startViewTransition(() => set(next));
+      else set(next);
+    });
+  });
+
+  systemDark.addEventListener('change', sync);
+  sync();
+</script>
+
+<style>
+  .theme-toggle {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--ink);
+    transition: border-color 0.2s var(--ease);
+  }
+
+  .theme-toggle:hover {
+    border-color: var(--ink);
+  }
+
+  .tt-disc {
+    width: 1.35rem;
+    height: 1.35rem;
+    transition: rotate 0.6s var(--ease);
+  }
+
+  /* Flip the record: the dark half swings round to the other side. */
+  .theme-toggle[aria-pressed='true'] .tt-disc {
+    rotate: 180deg;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tt-disc {
+      transition: none;
+    }
+  }
+</style>

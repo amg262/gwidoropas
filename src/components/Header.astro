@@ -1,5 +1,6 @@
 ---
 import LabelMark from './LabelMark.astro';
+import ThemeToggle from './ThemeToggle.astro';
 import { site } from '@/data/site';
 
 const path = Astro.url.pathname;
@@ -38,6 +39,7 @@ const links = [
           ))
         }
       </ul>
+      <ThemeToggle />
       <button class="browse-btn wide" type="button" popovertarget="browse">Browse</button>
       <a class="btn resume-btn" href={site.resume.href} aria-current={path.startsWith('/resume') ? 'page' : undefined}>Résumé</a>
     </nav>
@@ -114,6 +116,14 @@ const links = [
   .brand-name {
     font-size: 0.7rem;
     color: var(--muted);
+  }
+
+  /* Narrow phones: the label mark alone, so the switches fit. (The hero names
+     both the label and the artist right below.) */
+  @media (max-width: 26.75rem) {
+    .brand-text {
+      display: none;
+    }
   }
 
   nav {

@@ -62,15 +62,20 @@ const robots = unlisted ? UNLISTED_ROBOTS : noindex ? 'noindex' : null;
     {site.verification.google && <meta name="google-site-verification" content={site.verification.google} />}
     {site.verification.bing && <meta name="msvalidate.01" content={site.verification.bing} />}
 
-    <!-- Start the turntable paused for reduced-motion users (or whoever paused it last). Runs before paint. -->
+    <!-- Before paint: start the turntable paused for reduced-motion users (or whoever paused it
+         last), and put the lights where the visitor left them (no stored choice = follow the system). -->
     <script is:inline>
       (function () {
+        var root = document.documentElement;
         var m = null;
+        var t = null;
         try {
           m = localStorage.getItem('motion');
+          t = localStorage.getItem('theme');
         } catch (e) {}
         if (!m) m = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'paused' : 'playing';
-        document.documentElement.dataset.motion = m;
+        root.dataset.motion = m;
+        if (t === 'light' || t === 'dark') root.dataset.theme = t;
       })();
     </script>
 

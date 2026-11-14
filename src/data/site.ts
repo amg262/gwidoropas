@@ -70,8 +70,10 @@ export interface Credential {
 export interface Recommendation {
   /** Their name, as it appears on LinkedIn. */
   name: string;
-  /** Their role in the capacity they worked with Gwido, e.g. 'Founder, Amarna'. */
+  /** Their official title and company, as it appears on their LinkedIn profile. */
   role: string;
+  /** Optional line of context under the title: what they do there, other hats. */
+  about?: string;
   /** How they know Gwido, in plain words. Keep it consistent with the relationship they chose on LinkedIn. */
   relationship: string;
   /**
@@ -489,8 +491,9 @@ export const site = {
   recommendations: [
     {
       name: 'Andrew Gunn',
-      role: 'Founder, Amarna',
-      relationship: 'Mentor · worked with Gwido on Amarna Studio, Amarna Video and consulting work',
+      role: 'Senior Fullstack Software Engineer, Digital Platforms · OneDigital',
+      about: 'Handles all technology and development for OneDigital’s marketing technology team. Founder of Amarna.',
+      relationship: 'Gwido’s mentor · worked with him on Amarna Studio, Amarna Video and consulting work',
       paragraphs: [
         'Gwido has the kind of marketing instincts you can’t teach, and he pairs them with real curiosity about technology. That combination is rare this early in a marketing career.',
         'I’ve known Gwido for years and have worked with him in different capacities while he’s been in school. Most recently, he helped me shape the UI and UX for Amarna Studio and Amarna Video, the AI products I’m building at Amarna. He’s creative, he has a sharp eye for detail and he knows what people like. His feedback always comes back to the people who will actually use the product.',

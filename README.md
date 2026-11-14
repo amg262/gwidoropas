@@ -34,6 +34,7 @@ Every line must be something Gwido has done or can talk about for two minutes in
 - [ ] **Photo:** confirm Gwido is happy with the back-cover photo (`src/assets/portrait/gwido-ropas.jpg`). The current file is 483 px; a 1000 px+ square original will look sharper on retina screens. After swapping it, run `npm run readme:portrait` to re-press the README image.
 - [ ] **Real cover art (optional):** add `coverImage` to any release.
 - [ ] **January:** replace the Peyton Pours `TBA` metric with real numbers and set `status: released`.
+- [ ] **Recommendation:** once Andrew's recommendation is live on LinkedIn and Gwido has accepted it, check the site's text matches it word for word, set its `date` and paste the link into `url`. The paste-ready text and posting steps are in `linkedin-recommendation-andrew-gunn.md`.
 
 ---
 
@@ -80,6 +81,7 @@ Name, headline, photo, about, experience, education, skills, studio items and co
 - **`bullets` vs `resumeBullets`:** the home page shows the full bullets; the one-page printable résumé uses the shorter "radio edit" when one is given.
 - **`portrait`:** the back-cover photo beside the liner notes, also the `image` in the structured data. Astro turns it into AVIF/WebP/JPEG at three sizes (about 12 kB for most visitors). It is deliberately **not** on the printable résumé: US hiring norms advise against photos on résumés. Set it to `null` to hide it.
 - **Phone number** is `null` on purpose so it isn't scraped from the public site.
+- **`recommendations`** (A4, *On the record*) are other people's words, so they're the one part Gwido doesn't rewrite: each is quoted exactly as published on LinkedIn. The newest one with a `sticker` also becomes the hype sticker on the hero sleeve, and the build fails if the sticker isn't a word-for-word excerpt of the full text. An empty list hides both.
 
 ### `src/content/work/*.md`: releases (case studies)
 

@@ -6,11 +6,13 @@ const { credentials, coursework, coding } = site.education;
 // Earned plaques first, then whatever is still in the pressing plant.
 const ordered = [...credentials.filter((c) => c.status === 'certified'), ...credentials.filter((c) => c.status === 'pressing')];
 const earned = credentials.filter((c) => c.status === 'certified').length;
+const pressing = credentials.length - earned;
+const meta = [`${earned} on the wall`, pressing > 0 && `${pressing} pressing`].filter(Boolean).join(' · ');
 ---
 
 <section id="education" class="section certified" aria-labelledby="education-title">
   <div class="container">
-    <SectionHead id="education-title" track="B2" label="Education & credentials" title="Certified" meta={`${earned} on the wall · 1 pressing`} />
+    <SectionHead id="education-title" track="B2" label="Education & credentials" title="Certified" meta={meta} />
 
     <ul class="plaques">
       {
@@ -46,42 +48,54 @@ const earned = credentials.filter((c) => c.status === 'certified').length;
 </section>
 
 <style>
-  .certified {
-    background: var(--paper-2);
-  }
-
+  /* Gold records hung along the booth wall: small, evenly spaced, wood frames. */
   .plaques {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 13.5rem), 1fr));
-    gap: clamp(1.25rem, 1rem + 1.5vw, 2rem);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 10.5rem), 1fr));
+    gap: clamp(1rem, 0.75rem + 1vw, 1.5rem);
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
+  @media (max-width: 30rem) {
+    .plaques {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* Wide walls: hang them evenly across the full width. */
+  @media (min-width: 64rem) {
+    .plaques {
+      grid-template-columns: repeat(auto-fit, minmax(10.5rem, 12.5rem));
+      justify-content: space-between;
+    }
+  }
+
   .plaque {
     display: grid;
     grid-template-rows: auto 1fr;
-    background: #16130f;
+    background: #0e0d0b;
     color: #efe8da;
-    border-radius: 3px;
+    border-radius: 2px;
+    /* A thin wood moulding round a black mat: physical, so fixed colours. */
     box-shadow:
-      inset 0 0 0 6px #221d17,
-      inset 0 0 0 7px #3a3128,
-      var(--shadow-sleeve);
+      inset 0 0 0 5px #8a6140,
+      inset 0 0 0 6px #5e412a,
+      0 18px 28px -18px rgb(0 0 0 / 0.9);
     overflow: hidden;
   }
 
   .pl-frame {
     display: grid;
     place-items: center;
-    padding: 1.6rem 1.6rem 1.1rem;
+    padding: 1.15rem 1.15rem 0.8rem;
   }
 
   /* A gold record: brushed-metal conic sheen + grooves + a red label. */
   .pl-disc {
     position: relative;
-    width: 82%;
+    width: 74%;
     aspect-ratio: 1;
     border-radius: 50%;
     background:
@@ -96,31 +110,28 @@ const earned = credentials.filter((c) => c.status === 'certified').length;
     position: absolute;
     inset: 34%;
     border-radius: 50%;
-    background: radial-gradient(circle, #16130f 0 9%, var(--red) 10%);
+    background: radial-gradient(circle, #0e0d0b 0 9%, #e0452b 10%);
   }
 
   .pressing .pl-disc {
     background:
       repeating-radial-gradient(circle, rgb(255 255 255 / 0.06) 0 1px, transparent 1px 3px),
-      #0e0d0b;
-    box-shadow:
-      0 0 0 1.5px dashed rgb(239 232 218 / 0.4),
-      0 10px 22px -10px rgb(0 0 0 / 0.8);
+      #16130f;
     outline: 1.5px dashed rgb(239 232 218 / 0.35);
-    outline-offset: 6px;
+    outline-offset: 5px;
   }
 
   .pressing .pl-label {
-    background: radial-gradient(circle, #16130f 0 9%, var(--mustard) 10%);
+    background: radial-gradient(circle, #0e0d0b 0 9%, #e9b13b 10%);
   }
 
   /* The engraved brass plate. */
   .pl-plate {
     display: grid;
-    gap: 0.3rem;
+    gap: 0.25rem;
     align-content: start;
-    margin: 0 1rem 1rem;
-    padding: 0.95rem 1rem 1.05rem;
+    margin: 0 0.8rem 0.8rem;
+    padding: 0.7rem 0.6rem 0.8rem;
     background: linear-gradient(160deg, #e9d18e, #c9a24e 45%, #e3c57a 70%, #b48a36);
     color: #2a1f0e;
     border-radius: 2px;
@@ -129,41 +140,42 @@ const earned = credentials.filter((c) => c.status === 'certified').length;
   }
 
   .pressing .pl-plate {
-    background: #2a251f;
+    background: #221e19;
     color: #efe8da;
     box-shadow: inset 0 0 0 1px #3e382f;
   }
 
   .pl-status {
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     opacity: 0.8;
   }
 
   .pl-title {
-    font-size: 1.02rem;
+    font-size: 0.86rem;
     line-height: 1.2;
     letter-spacing: -0.005em;
   }
 
   .pl-school {
-    font-size: 0.82rem;
+    font-size: 0.72rem;
+    line-height: 1.3;
     opacity: 0.85;
   }
 
   .pl-date {
-    font-size: 0.74rem;
+    font-size: 0.66rem;
   }
 
   .coursework {
     display: grid;
-    gap: 1.25rem;
-    margin: clamp(2.5rem, 2rem + 2vw, 3.5rem) 0 0;
+    gap: 1rem;
+    margin: clamp(2.25rem, 1.75rem + 2vw, 3.25rem) 0 0;
   }
 
   .coursework > div {
     display: grid;
-    gap: 0.5rem;
-    padding-top: 1rem;
+    gap: 0.4rem;
+    padding-top: 0.9rem;
     border-top: 1px solid var(--line);
   }
 
@@ -182,5 +194,6 @@ const earned = credentials.filter((c) => c.status === 'certified').length;
   .coursework dd {
     margin: 0;
     color: var(--ink-2);
+    font-size: var(--step--1);
   }
 </style>

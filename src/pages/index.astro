@@ -1,9 +1,8 @@
 ---
 import Base from '@/layouts/Base.astro';
 import Hero from '@/components/home/Hero.astro';
-import Ticker from '@/components/home/Ticker.astro';
 import LinerNotes from '@/components/home/LinerNotes.astro';
-import Discography from '@/components/home/Discography.astro';
+import Crate from '@/components/home/Crate.astro';
 import Releases from '@/components/home/Releases.astro';
 import OnTheRecord from '@/components/home/OnTheRecord.astro';
 import SideB from '@/components/home/SideB.astro';
@@ -11,6 +10,7 @@ import Personnel from '@/components/home/Personnel.astro';
 import Certified from '@/components/home/Certified.astro';
 import Studio from '@/components/home/Studio.astro';
 import Booking from '@/components/home/Booking.astro';
+import Booth from '@/components/home/Booth.astro';
 import { site } from '@/data/site';
 
 const websiteLd = {
@@ -25,14 +25,15 @@ const websiteLd = {
 
 <Base ogType="profile" jsonLd={[websiteLd]}>
   <Hero />
-  <Ticker />
   <LinerNotes />
-  <Discography />
+  <Crate />
   <Releases />
   <OnTheRecord />
-  <SideB />
-  <Personnel />
-  <Certified />
-  <Studio />
+  <Booth>
+    <SideB />
+    <Personnel />
+    <Certified />
+    <Studio />
+  </Booth>
   <Booking />
 </Base>

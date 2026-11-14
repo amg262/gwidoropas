@@ -1,0 +1,100 @@
+---
+/**
+ * An obi: the paper band Japanese pressings wear around the left edge of the
+ * sleeve, printed with the title in vertical type. Collectors keep them; here
+ * it carries the name and catalogue number without cluttering the art.
+ * Sits inside a sleeve, sized in the sleeve's container units. They're cqw,
+ * not cqi: in vertical writing the inline axis is the (unqueryable) height.
+ * Decorative:
+ * everything on it is said in text elsewhere on the page.
+ */
+interface Props {
+  /** Small line in the coloured head, e.g. the catalogue number. */
+  head: string;
+  /** The vertical title. */
+  title: string;
+  /** Small vertical line beside the title, e.g. a role or status. */
+  sub?: string;
+  /** Small line at the foot. */
+  foot?: string;
+  /** Head colour (defaults to label red). */
+  accent?: string;
+  class?: string;
+}
+
+const { head, title, sub, foot, accent = '#e0452b', class: className } = Astro.props;
+---
+
+<div class:list={['obi', className]} style={`--obi-accent:${accent}`} aria-hidden="true">
+  <span class="obi-head mono">{head}</span>
+  <span class="obi-body">
+    <span class="obi-title display">{title}</span>
+    {sub && <span class="obi-sub wide">{sub}</span>}
+  </span>
+  {foot && <span class="obi-foot mono">{foot}</span>}
+</div>
+
+<style>
+  .obi {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 3;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    width: 13.5cqw;
+    background: #efe8da;
+    color: #16130f;
+    /* Paper wrapped round the spine: a fold on the left, a soft shadow cast on the art. */
+    background-image: linear-gradient(90deg, rgb(0 0 0 / 0.14), transparent 14%, transparent 86%, rgb(0 0 0 / 0.06));
+    box-shadow:
+      1px 0 0 rgb(0 0 0 / 0.18),
+      0.6cqw 0 1.6cqw rgb(0 0 0 / 0.35);
+  }
+
+  .obi-head {
+    display: grid;
+    place-items: center;
+    padding: 2.2cqw 0 2.4cqw;
+    background: var(--obi-accent);
+    color: #efe8da;
+    font-size: max(0.45rem, 2.3cqw);
+    letter-spacing: 0.06em;
+    writing-mode: vertical-rl;
+  }
+
+  .obi-body {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 1.1cqw;
+    padding-block: 3.2cqw;
+    overflow: hidden;
+  }
+
+  .obi-title {
+    writing-mode: vertical-rl;
+    font-size: 6.6cqw;
+    line-height: 0.9;
+    white-space: nowrap;
+  }
+
+  .obi-sub {
+    writing-mode: vertical-rl;
+    font-size: max(0.42rem, 1.9cqw);
+    letter-spacing: 0.14em;
+    white-space: nowrap;
+    opacity: 0.8;
+  }
+
+  .obi-foot {
+    display: grid;
+    place-items: center;
+    padding: 2.2cqw 0;
+    border-top: 1px solid rgb(22 19 15 / 0.25);
+    font-size: max(0.42rem, 2cqw);
+    writing-mode: vertical-rl;
+  }
+</style>

@@ -1,5 +1,12 @@
 ---
+/**
+ * The shop window. One record, face-out on a ledge, wearing its obi; the
+ * record half out of the sleeve and turning. The name and the pitch sit beside
+ * it, and the turntable's "now playing" card lists what's current (derived:
+ * roles still running, credentials still pressing, and the availability line).
+ */
 import Record from '@/components/Record.astro';
+import Obi from '@/components/Obi.astro';
 import Icon from '@/components/Icon.astro';
 import MotionToggle from '@/components/MotionToggle.astro';
 import { coverSvg, VENN } from '@/lib/cover';
@@ -15,11 +22,17 @@ const venn = coverSvg({ style: 'venn', bg: '#16130f', fg: '#efe8da', accent: '#e
 const pct = (n: number) => `${((n / 600) * 100).toFixed(2)}%`;
 const [m, t, d] = VENN.centres;
 const [first, ...rest] = site.name.split(' ');
+
+const nowPlaying = [
+  ...site.experience.filter((e) => e.nowPlaying && e.end === null).map((e) => ({ k: e.role.split(',')[0]!, v: e.org })),
+  ...site.education.credentials.filter((c) => c.status === 'pressing').map((c) => ({ k: c.credential, v: `${c.school.replace(/ \(.*\)/, '')}, ${c.date?.toLowerCase()}` })),
+  ...(site.availabilityShort ? [{ k: 'Now booking', v: site.availabilityShort }] : []),
+];
 ---
 
 <section class="hero" aria-labelledby="hero-title">
   <div class="container hero-grid">
-    <div class="hero-copy">
+    <div class="hero-head">
       <p class="kicker">
         <span class="mono">{catalog(1)}</span>
         <span class="wide">{site.label.name} presents</span>
@@ -31,11 +44,11 @@ const [first, ...rest] = site.name.split(' ');
       </h1>
 
       <p class="hero-role wide"><span class="rule" aria-hidden="true"></span>{site.headline}</p>
+    </div>
 
+    <div class="hero-body">
       <p class="hero-tagline serif" set:html={tagline} />
-
       <p class="hero-intro">{site.hero.intro}</p>
-
       <div class="hero-actions">
         <a class="btn" href="#work"><Icon name="play" /> Selected work</a>
         <a class="btn btn-ghost" href={site.resume.href}>Résumé <Icon name="arrow-right" /></a>
@@ -43,21 +56,27 @@ const [first, ...rest] = site.name.split(' ');
     </div>
 
     <div class="hero-art">
-      <div class="turntable">
+      <div class="stand">
         <Record class="hero-record" uid="hero" ring={`${site.label.name} · Side A · 33⅓ RPM · Stereo · `} center={catalog(1)} sub="Side A" />
 
         <div class="hero-sleeve" role="img" aria-label={`Album cover: three overlapping circles labelled marketing, technology and design. ${site.name} works where they meet.`}>
           <div class="art" set:html={venn} />
-          <div class="hs-name display" aria-hidden="true">
-            <span>{first}</span><span>{rest.join(' ')}</span>
-          </div>
+          <Obi head={catalog(1)} title={site.name} sub={site.headline} foot="LP" />
           <span class="hs-tag mono" style={`left:${pct(m.x)};top:${pct(m.y - VENN.r - 26)}`} aria-hidden="true">Marketing</span>
           <span class="hs-tag mono" style={`left:${pct(t.x + 40)};top:${pct(t.y + VENN.r + 16)}`} aria-hidden="true">Technology</span>
           <span class="hs-tag mono" style={`left:${pct(d.x - 40)};top:${pct(d.y + VENN.r + 16)}`} aria-hidden="true">Design</span>
           <div class="hs-foot" aria-hidden="true">
-            <span class="mono">{catalog(1)} · LP</span>
+            <span class="mono">{catalog(1)} · Stereo</span>
             <span class="wide">{site.label.name}</span>
           </div>
+          {
+            site.advanceCopy && (
+              <span class="stamp wide" aria-hidden="true">
+                <span>Promotional copy</span>
+                <span>Not for sale</span>
+              </span>
+            )
+          }
         </div>
 
         {
@@ -73,14 +92,27 @@ const [first, ...rest] = site.name.split(' ');
           )
         }
       </div>
+      <div class="ledge" aria-hidden="true"></div>
 
-      <div class="hero-under">
-        <ul class="specs mono" aria-label="Pressing details">
-          <li>Stereo</li>
-          <li>33⅓ RPM</li>
-          <li>{site.label.city}</li>
+      <div class="now">
+        <div class="now-top">
+          <p class="wide now-k">
+            <span class="eq loop" aria-hidden="true"><i></i><i></i><i></i></span>
+            Now playing
+          </p>
+          <MotionToggle />
+        </div>
+        <ul class="now-list">
+          {
+            nowPlaying.map((it) => (
+              <li>
+                <span class="now-t">{it.k}</span>
+                <span class="serif now-v">{it.v}</span>
+              </li>
+            ))
+          }
         </ul>
-        <MotionToggle />
+        <p class="mono now-specs" aria-label="Pressing details">Stereo · 33⅓ RPM · {site.label.city}</p>
       </div>
     </div>
   </div>
@@ -89,27 +121,42 @@ const [first, ...rest] = site.name.split(' ');
 <style>
   .hero {
     overflow-x: clip;
-    padding-block: clamp(2.5rem, 1rem + 5vw, 6rem) clamp(3rem, 2rem + 4vw, 6rem);
+    padding-block: clamp(2.25rem, 1rem + 4vw, 5rem) clamp(1rem, 0.5rem + 2vw, 3rem);
   }
 
+  /* Phones: name, then the record, then the pitch. Desktop: words left, window right. */
   .hero-grid {
     display: grid;
-    gap: clamp(3rem, 2rem + 4vw, 5rem);
-    align-items: center;
+    grid-template-areas: 'head' 'art' 'body';
+    gap: clamp(2rem, 1.5rem + 2vw, 3rem);
+  }
+
+  .hero-head {
+    grid-area: head;
+  }
+  .hero-body {
+    grid-area: body;
+  }
+  .hero-art {
+    grid-area: art;
   }
 
   @media (min-width: 60rem) {
     .hero-grid {
-      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+      grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+      grid-template-areas: 'head art' 'body art';
+      grid-template-rows: auto 1fr;
+      column-gap: clamp(3rem, 1rem + 4vw, 6rem);
+      row-gap: 2rem;
+      align-items: start;
+    }
+
+    .hero-head {
+      align-self: end;
     }
   }
 
-  /* ── Copy ── */
-  .hero-copy {
-    display: grid;
-    justify-items: start;
-  }
-
+  /* ── Words ── */
   .kicker {
     display: flex;
     align-items: center;
@@ -121,52 +168,47 @@ const [first, ...rest] = site.name.split(' ');
     padding: 0.25em 0.6em;
     border: 1px solid var(--ink);
     border-radius: 999px;
-    font-size: 0.74rem;
+    font-size: 0.72rem;
   }
 
   .hero-name {
     display: grid;
-    font-size: clamp(5.2rem, 0.5rem + 19vw, 12rem);
-    line-height: 0.8;
-    letter-spacing: -0.012em;
+    font-size: clamp(4.4rem, 1rem + 15vw, 8.25rem);
+    line-height: 0.82;
+    letter-spacing: -0.01em;
   }
 
   @media (min-width: 60rem) {
     .hero-name {
-      font-size: clamp(7rem, 1rem + 10.5vw, 12.5rem);
+      font-size: clamp(5.5rem, 2rem + 5.6vw, 8.25rem);
     }
-  }
-
-  .hero-name span:last-child {
-    color: var(--red);
   }
 
   .hero-role {
     display: flex;
     align-items: center;
     gap: 0.8rem;
-    margin-top: 1.6rem;
-    font-size: clamp(0.78rem, 0.7rem + 0.3vw, 0.95rem);
+    margin-top: 1.4rem;
+    font-size: clamp(0.74rem, 0.7rem + 0.2vw, 0.86rem);
   }
 
   .hero-role .rule {
     width: 2.5rem;
-    height: 2px;
-    background: var(--ink);
+    height: 1px;
+    background: var(--red);
   }
 
   .hero-tagline {
-    max-width: 18ch;
-    margin-top: 1.2rem;
-    font-size: clamp(2rem, 1.2rem + 3vw, 3.6rem);
-    line-height: 1.02;
+    max-width: 17ch;
+    font-size: clamp(1.9rem, 1.3rem + 2.2vw, 3rem);
+    line-height: 1.04;
   }
 
   .hero-tagline :global(em) {
     font-style: italic;
     text-decoration-line: underline;
-    text-decoration-thickness: 0.09em;
-    text-underline-offset: 0.12em;
+    text-decoration-thickness: 0.06em;
+    text-underline-offset: 0.14em;
     text-decoration-skip-ink: none;
   }
 
@@ -181,10 +223,9 @@ const [first, ...rest] = site.name.split(' ');
   }
 
   .hero-intro {
-    max-width: 34rem;
-    margin-top: 1.5rem;
-    color: var(--ink-2);
-    font-size: var(--step-0);
+    max-width: 32rem;
+    margin-top: 1.25rem;
+    color: var(--muted);
     line-height: 1.6;
   }
 
@@ -192,17 +233,17 @@ const [first, ...rest] = site.name.split(' ');
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
-    margin-top: 2rem;
+    margin-top: 1.75rem;
   }
 
-  /* ── Turntable ── */
+  /* ── The window ── */
   .hero-art {
     width: 100%;
-    max-width: 44rem;
+    max-width: 46rem;
     justify-self: center;
   }
 
-  .turntable {
+  .stand {
     position: relative;
     width: 100%;
     aspect-ratio: 1.42 / 1;
@@ -211,7 +252,7 @@ const [first, ...rest] = site.name.split(' ');
   .hero-sleeve {
     position: absolute;
     left: 0;
-    top: 0;
+    bottom: 0;
     width: 70.4%;
     aspect-ratio: 1;
     container-type: inline-size;
@@ -227,6 +268,7 @@ const [first, ...rest] = site.name.split(' ');
     content: '';
     position: absolute;
     inset: 0;
+    z-index: 4;
     pointer-events: none;
     background: linear-gradient(90deg, rgb(255 255 255 / 0.07), transparent 2.5%, transparent 97%, rgb(0 0 0 / 0.25));
   }
@@ -237,15 +279,6 @@ const [first, ...rest] = site.name.split(' ');
     inset: 0;
     width: 100%;
     height: 100%;
-  }
-
-  .hs-name {
-    position: absolute;
-    top: 6cqi;
-    left: 6cqi;
-    display: grid;
-    font-size: 15.5cqi;
-    line-height: 0.82;
   }
 
   .hs-tag {
@@ -260,7 +293,7 @@ const [first, ...rest] = site.name.split(' ');
 
   .hs-foot {
     position: absolute;
-    left: 6cqi;
+    left: 19.5cqi;
     right: 6cqi;
     bottom: 5.5cqi;
     display: flex;
@@ -278,13 +311,48 @@ const [first, ...rest] = site.name.split(' ');
     opacity: 0.8;
   }
 
-  /* ── Hype sticker: stuck to the shrink-wrap over the sleeve's top-right corner ── */
+  /* A rubber stamp, the way promo pressings were marked. Uneven ink via the grain mask. */
+  .stamp {
+    position: absolute;
+    left: 19cqi;
+    top: 5.5cqi;
+    z-index: 3;
+    display: grid;
+    gap: 0.7cqi;
+    padding: 1.3cqi 2cqi;
+    border: 0.8cqi double #f0583c;
+    border-radius: 1cqi;
+    color: #f0583c;
+    font-size: 1.95cqi;
+    letter-spacing: 0.16em;
+    text-align: center;
+    rotate: -7deg;
+    opacity: 0.85;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.2 1.7'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.2 1.7'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .stamp span:first-child {
+    padding-bottom: 0.8cqi;
+    border-bottom: 0.35cqi solid currentColor;
+  }
+
+  /* The display ledge the sleeve stands on. */
+  .ledge {
+    height: 6px;
+    margin-top: -1px;
+    margin-right: 6%;
+    border-radius: 1px;
+    background: var(--ledge);
+    box-shadow: 0 10px 18px -10px rgb(0 0 0 / 0.5);
+  }
+
+  /* ── Hype sticker on the shrink-wrap, over the sleeve's top-right corner ── */
   .hype {
     --hype-w: clamp(6rem, 20%, 9.25rem);
-    /* How much of the sticker sits on the sleeve; the rest hangs over the record. */
     --hype-on: 0.8;
     position: absolute;
-    z-index: 3;
+    z-index: 5;
     top: -3%;
     left: calc(70.4% - var(--hype-on) * var(--hype-w));
     width: var(--hype-w);
@@ -305,7 +373,6 @@ const [first, ...rest] = site.name.split(' ');
       scale 0.5s var(--ease);
   }
 
-  /* Phones: smaller, and further onto the record so it clears the "Marketing" label. */
   @media (max-width: 40rem) {
     .hype {
       --hype-w: 5.4rem;
@@ -313,7 +380,6 @@ const [first, ...rest] = site.name.split(' ');
     }
   }
 
-  /* A printed keyline just inside the edge, in label red. */
   .hype::before {
     content: '';
     position: absolute;
@@ -360,7 +426,6 @@ const [first, ...rest] = site.name.split(' ');
     text-transform: uppercase;
   }
 
-  /* Too small to read the byline on phones; the quote and the link carry it. */
   @container (max-width: 7.5rem) {
     .hype-by {
       display: none;
@@ -379,9 +444,9 @@ const [first, ...rest] = site.name.split(' ');
     }
   }
 
-  .turntable :global(.hero-record) {
+  .stand :global(.hero-record) {
     position: absolute;
-    top: 2.2%;
+    bottom: 2.2%;
     left: 2.2%;
     width: 66%;
     z-index: 1;
@@ -390,7 +455,7 @@ const [first, ...rest] = site.name.split(' ');
     transition: transform 0.6s var(--ease);
   }
 
-  .turntable:hover :global(.hero-record) {
+  .stand:hover :global(.hero-record) {
     --out: 48%;
   }
 
@@ -401,34 +466,71 @@ const [first, ...rest] = site.name.split(' ');
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .turntable :global(.hero-record) {
+    .stand :global(.hero-record) {
       animation: none;
     }
   }
 
-  .hero-under {
+  /* ── The turntable's now-playing card ── */
+  .now {
+    margin-top: 1.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .now-top {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    margin-top: 1.5rem;
+    gap: 0.75rem;
   }
 
-  .specs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem 1.1rem;
-    margin: 0;
+  .now-k {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--red-ink);
+  }
+
+  .now-list {
+    display: grid;
+    gap: 0.35rem 2rem;
+    margin: 0.9rem 0 0;
     padding: 0;
     list-style: none;
-    font-size: 0.74rem;
-    color: var(--muted);
-    text-transform: uppercase;
   }
 
-  .specs li + li::before {
-    content: '·';
-    margin-right: 1.1rem;
+  @media (min-width: 36rem) {
+    .now-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .now-list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.5rem;
+    padding-block: 0.3rem;
+    border-bottom: 1px dotted var(--line);
+    font-size: var(--step--1);
+    line-height: 1.35;
+  }
+
+  .now-t {
+    font-weight: 600;
+  }
+
+  .now-v {
+    color: var(--muted);
+    font-size: 1.08em;
+  }
+
+  .now-specs {
+    margin-top: 0.9rem;
+    color: var(--muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
   }
 </style>

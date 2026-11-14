@@ -26,6 +26,14 @@
   --cocoa: #4a2c22;
   --vinyl: #0e0d0b;
 
+  /* Shop fittings: the crate, the wall ledge, kraft sleeves, a felt letterboard */
+  --wood: #c99d6b;
+  --wood-2: #b5875a;
+  --wood-edge: #8a6140;
+  --kraft: #cdb28a;
+  --ledge: #16130f;
+  --felt: #141210;
+
   /* Full-bleed bands (Side B, footer) */
   --band: #16130f;
   --band-2: #221e19;
@@ -46,7 +54,7 @@
 
   /* Space & shape */
   --gutter: clamp(1rem, 0.4rem + 2.6vw, 2.75rem);
-  --section: clamp(4.5rem, 3rem + 6vw, 9rem);
+  --section: clamp(3.75rem, 2.5rem + 4.5vw, 7rem);
   --maxw: 84rem;
   --radius: 4px;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -74,6 +82,12 @@
     --band-line: #3e382f;
 
     --shadow-sleeve: 0 0 0 1px rgb(255 255 255 / 0.06), 0 22px 44px -20px rgb(0 0 0 / 0.9);
+
+    --wood: #9a7350;
+    --wood-2: #85613f;
+    --wood-edge: #5e412a;
+    --kraft: #a88d68;
+    --ledge: #3a342b;
   }
 }
 
@@ -243,6 +257,14 @@ a:hover {
   letter-spacing: -0.005em;
 }
 
+/* Marker on card stock: staff picks, price tags, the coming-soon board. Cards only. */
+.hand {
+  font-family: var(--font-hand), 'Bradley Hand', 'Segoe Print', cursive;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
 /* ──────────────────────────────────────────────────────────────────────────
    Layout
    ────────────────────────────────────────────────────────────────────────── */
@@ -263,6 +285,15 @@ a:hover {
   --muted: var(--band-muted);
   --line: var(--band-line);
   --red-ink: #ff8166;
+  /* Surfaces too, so anything that reads --paper / --card (buttons, cards,
+     the record's spindle hole) inverts with the room instead of glowing. */
+  --paper: var(--band);
+  --paper-2: var(--band-2);
+  --card: var(--band-2);
+  --line-soft: var(--band-line);
+  --ledge: var(--band-line);
+  --shadow-sleeve: 0 0 0 1px rgb(255 255 255 / 0.05), 0 22px 44px -20px rgb(0 0 0 / 0.9);
+  color-scheme: dark;
 }
 
 .visually-hidden {
@@ -436,57 +467,6 @@ html[data-motion='paused'] .loop * {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Section heads: track number, plain label, poster title.
-   ────────────────────────────────────────────────────────────────────────── */
-.sec-head {
-  display: grid;
-  gap: 1rem;
-  padding-top: 1.1rem;
-  margin-bottom: clamp(2.5rem, 1.5rem + 3vw, 4.5rem);
-  border-top: 4px solid var(--ink);
-}
-
-.sec-head .track {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: 0.9rem;
-  border-bottom: 1px solid var(--line);
-}
-
-.sec-head .track span:first-child {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.8rem;
-}
-
-.sec-head .track-no {
-  display: inline-grid;
-  place-items: center;
-  min-width: 2.4rem;
-  height: 1.6rem;
-  padding-inline: 0.5rem;
-  border-radius: 999px;
-  background: var(--ink);
-  color: var(--paper);
-  font-family: var(--font-mono), monospace;
-  font-size: 0.78rem;
-  font-weight: 500;
-}
-
-.sec-head h2 {
-  font-size: var(--step-6);
-}
-
-.sec-head .lede {
-  max-width: 40rem;
-  font-size: var(--step-1);
-  line-height: 1.45;
-  color: var(--ink-2);
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
    Prose (case study bodies)
    ────────────────────────────────────────────────────────────────────────── */
 .prose {
@@ -510,17 +490,19 @@ html[data-motion='paused'] .loop * {
   padding-top: 0.9rem;
   border-top: 1px solid var(--line);
   color: var(--ink);
-  font-stretch: 62%;
-  font-weight: 800;
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
   font-size: var(--step-3);
   line-height: 1;
-  text-transform: uppercase;
+  letter-spacing: -0.01em;
 }
 
 .prose h2::before {
   content: 'A' counter(track);
   flex: none;
   font-family: var(--font-mono), monospace;
+  font-style: normal;
   font-stretch: 100%;
   font-weight: 500;
   font-size: 0.8rem;

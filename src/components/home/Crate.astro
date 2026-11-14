@@ -1,0 +1,622 @@
+---
+/**
+ * A2 · The crate. Each role is a sleeve standing in a record crate; pull one
+ * up to read its notes. Newest at the front (left), early demos at the back.
+ *
+ * Built to degrade: without JavaScript every sleeve is a plain link to its
+ * notes and every set of notes is shown. The inline script after the markup
+ * upgrades it to an ARIA tabs widget (arrow keys, Home/End), and hides the
+ * other notes with hidden="until-found", so find-in-page still reaches them.
+ */
+import SectionHead from '@/components/SectionHead.astro';
+import { site, type Release } from '@/data/site';
+import { formatRange, yearSpan } from '@/lib/dates';
+
+const pad = (n: number) => String(n).padStart(2, '0');
+
+const formatNote: Record<Release['format'], string> = {
+  LP: 'LP',
+  EP: 'EP',
+  Single: 'Single',
+  'Box set': `${site.experience.find((e) => e.discs)?.discs?.length ?? 3}-disc box set`,
+};
+
+type Slot = { id: string; mark: string; years: string; label: string; pattern: string; bg?: string; fg?: string };
+const slots: Slot[] = [
+  ...site.experience.map((r) => ({
+    id: r.id,
+    mark: r.sleeve.mark,
+    years: yearSpan(r.start, r.end),
+    label: `${r.org}: ${r.role.split(',')[0]}`,
+    pattern: r.sleeve.pattern,
+    bg: r.sleeve.bg,
+    fg: r.sleeve.fg,
+  })),
+  { id: 'b-sides', mark: 'B', years: '2019–21', label: 'B-sides: earlier experience', pattern: 'bsides' },
+];
+const count = slots.length;
+---
+
+<section id="experience" class="section" aria-labelledby="experience-title">
+  <div class="container">
+    <SectionHead id="experience-title" track="A2" label="Experience" title="The discography" meta={`${count} entries`}>
+      <p>Newest at the front: the marketing work, then the plant-floor box set, then the early demos. Pull a sleeve to read its notes.</p>
+    </SectionHead>
+
+    <div class="xp" data-xp>
+      <div class="xp-crate">
+        <ol class="xp-row" aria-label="Experience">
+          {
+            slots.map((s, i) => (
+              <li style={`--i:${i};--n:${count}`}>
+                <a class="xp-sleeve" id={`tab-${s.id}`} href={`#${s.id}`}>
+                  <span class:list={['xp-cover', `p-${s.pattern}`]} style={s.bg ? `--m-bg:${s.bg};--m-fg:${s.fg}` : undefined} aria-hidden="true">
+                    <span class="display xp-mark">{s.mark}</span>
+                    <span class="mono xp-years">{s.years}</span>
+                  </span>
+                  <span class="visually-hidden">{s.label}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+        <div class="xp-front" aria-hidden="true">
+          <span class="xp-hole"></span>
+          <span class="wide xp-stencil">{site.label.name} · Discography</span>
+        </div>
+      </div>
+
+      <div class="xp-panels">
+        {
+          site.experience.map((r) => (
+            <article class="xp-panel" id={r.id}>
+              <div class="panel-in">
+                <p class="r-chips">
+                  <span class="chip">{formatNote[r.format]}</span>
+                  {r.nowPlaying && r.end === null && (
+                    <span class="chip chip-live">
+                      <span class="eq loop">
+                        <i />
+                        <i />
+                        <i />
+                      </span>
+                      Now playing
+                    </span>
+                  )}
+                  <span class="mono r-year">{yearSpan(r.start, r.end)}</span>
+                </p>
+
+                <h3 class="r-role">{r.role}</h3>
+
+                <p class="r-org">
+                  {r.url ? (
+                    <a href={r.url} rel="noopener" target="_blank">
+                      {r.org}
+                    </a>
+                  ) : (
+                    r.org
+                  )}
+                  {r.orgNote && <span class="serif"> {r.orgNote}</span>}
+                  <span class="r-sep" aria-hidden="true">
+                    /
+                  </span>
+                  {r.location}
+                  <span class="r-sep" aria-hidden="true">
+                    /
+                  </span>
+                  <span class="mono">{formatRange(r.start, r.end)}</span>
+                </p>
+
+                {r.about && <p class="r-about">{r.about}</p>}
+
+                {r.bullets.length > 0 && (
+                  <ol class="r-tracks">
+                    {r.bullets.map((b, i) => (
+                      <li>
+                        <span class="mono t-n" aria-hidden="true">
+                          {pad(i + 1)}
+                        </span>
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+
+                {r.discs && (
+                  <div class="discs">
+                    {r.discs.map((d, i) => (
+                      <section class="disc-item" aria-label={`Disc ${i + 1}: ${d.role}`}>
+                        <p class="disc-head">
+                          <span class="mono disc-no">Disc {i + 1}</span>
+                          <span class="disc-role">{d.role}</span>
+                          <span class="mono disc-dates">{formatRange(d.start, d.end)}</span>
+                        </p>
+                        <ol class="r-tracks">
+                          {d.bullets.map((b, j) => (
+                            <li>
+                              <span class="mono t-n" aria-hidden="true">
+                                {pad(j + 1)}
+                              </span>
+                              <span>{b}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      </section>
+                    ))}
+                  </div>
+                )}
+
+                {r.credit && <p class="r-credit serif">{r.credit}</p>}
+              </div>
+            </article>
+          ))
+        }
+
+        <article class="xp-panel" id="b-sides">
+          <div class="panel-in">
+            <p class="r-chips">
+              <span class="chip">B-sides &amp; rarities</span>
+              <span class="mono r-year">2019–21</span>
+            </p>
+            <h3 class="r-role">Earlier experience</h3>
+            <ol class="bs-list">
+              {
+                site.earlier.map((e) => (
+                  <li>
+                    <p class="bs-role">
+                      <strong>{e.role}</strong>, {e.org}
+                    </p>
+                    <p class="mono bs-when">
+                      {e.location} / {e.when}
+                    </p>
+                    <p class="bs-note">{e.note}</p>
+                  </li>
+                ))
+              }
+            </ol>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('[data-xp]');
+    if (!root) return;
+    var tabs = Array.prototype.slice.call(root.querySelectorAll('.xp-sleeve'));
+    var panels = tabs.map(function (t) {
+      return document.getElementById(t.hash.slice(1));
+    });
+    if (panels.some(function (p) { return !p; })) return;
+    // Find-in-page can open an "until-found" panel; where that isn't supported, plain hidden.
+    var HIDE = 'onbeforematch' in document.body ? 'until-found' : '';
+    var list = root.querySelector('.xp-row');
+    list.setAttribute('role', 'tablist');
+    tabs.forEach(function (t, i) {
+      t.parentElement.setAttribute('role', 'presentation');
+      t.setAttribute('role', 'tab');
+      t.setAttribute('aria-controls', panels[i].id);
+      panels[i].setAttribute('role', 'tabpanel');
+      panels[i].setAttribute('aria-labelledby', t.id);
+      panels[i].tabIndex = 0;
+    });
+    function select(i, focus) {
+      tabs.forEach(function (t, j) {
+        var on = i === j;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        if (on) panels[j].removeAttribute('hidden');
+        else panels[j].setAttribute('hidden', HIDE);
+      });
+      if (focus) tabs[i].focus();
+    }
+    function indexOf(hash) {
+      var id = decodeURIComponent(hash.replace(/^#/, ''));
+      for (var i = 0; i < panels.length; i++) if (panels[i].id === id) return i;
+      return -1;
+    }
+    var keys = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function (e) {
+        e.preventDefault();
+        select(i);
+        history.replaceState(null, '', '#' + panels[i].id);
+      });
+      t.addEventListener('keydown', function (e) {
+        var n = tabs.length;
+        var to = e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : keys[e.key] ? (i + keys[e.key] + n) % n : -1;
+        if (to < 0) return;
+        e.preventDefault();
+        select(to, true);
+      });
+      panels[i].addEventListener('beforematch', function () {
+        select(i);
+      });
+    });
+    addEventListener('hashchange', function () {
+      var i = indexOf(location.hash);
+      if (i >= 0) select(i);
+    });
+    var start = indexOf(location.hash);
+    select(start >= 0 ? start : 0);
+    root.setAttribute('data-ready', '');
+  })();
+</script>
+
+<style>
+  /* Until the script has run (JS on: Base sets html[data-motion] before paint),
+     show only the first notes, or the deep-linked ones, so nothing flashes. */
+  :global(html[data-motion]) .xp:not([data-ready]) .xp-panel:not(:first-child):not(:target),
+  :global(html[data-motion]) .xp:not([data-ready]):has(.xp-panel:target) .xp-panel:first-child:not(:target) {
+    display: none;
+  }
+
+  .xp {
+    --sw: clamp(4.9rem, calc((100vw - 4.5rem) / 3.8), 9.25rem); /* sleeve width: five fit across a phone */
+    --step: calc(var(--sw) * 0.7); /* how far apart they stand */
+    --bury: 0.42; /* how much of each sleeve the crate's front board hides */
+    display: grid;
+    gap: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+    align-items: start;
+  }
+
+  /* Small sleeves: let more of each stand proud of the board, so the years show. */
+  @media (max-width: 40rem) {
+    .xp {
+      --bury: 0.34;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .xp {
+      grid-template-columns: auto minmax(0, 1fr);
+      column-gap: clamp(3rem, 1rem + 4vw, 6rem);
+    }
+
+    .xp-crate {
+      position: sticky;
+      top: 7rem;
+    }
+  }
+
+  /* ── The crate ── */
+  .xp-crate {
+    position: relative;
+    width: calc(var(--sw) + (5 - 1) * var(--step) + 2rem);
+    max-width: 100%;
+    padding: calc(var(--sw) * 0.92) 1rem 0;
+    justify-self: center;
+  }
+
+  .xp-row {
+    position: relative;
+    height: var(--sw);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .xp-row li {
+    position: absolute;
+    left: calc(var(--i) * var(--step));
+    bottom: 0;
+    width: var(--sw);
+    z-index: calc(var(--i) + 1);
+  }
+
+  .xp-sleeve {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    border-radius: 2px;
+    transform: translateY(4%) rotate(var(--lean, 0deg));
+    transform-origin: 50% 100%;
+    transition: transform 0.45s var(--ease);
+  }
+
+  .xp-row li:nth-child(odd) .xp-sleeve {
+    --lean: -1.6deg;
+  }
+  .xp-row li:nth-child(even) .xp-sleeve {
+    --lean: 1.2deg;
+  }
+  .xp-row li:nth-child(3n) .xp-sleeve {
+    --lean: -0.6deg;
+  }
+
+  .xp-sleeve:hover {
+    transform: translateY(-8%) rotate(var(--lean));
+  }
+
+  .xp-row li:has([aria-selected='true']) {
+    z-index: 20;
+  }
+
+  /* Pulled: right up out of the crate to look at, standing straight, clear of its neighbours' labels. */
+  .xp-sleeve[aria-selected='true'] {
+    transform: translateY(-84%) rotate(0deg);
+  }
+
+  .xp-sleeve:focus-visible {
+    outline-offset: 4px;
+  }
+
+  .xp-cover {
+    position: relative;
+    display: grid;
+    align-content: start;
+    justify-items: start;
+    gap: 0.35rem;
+    aspect-ratio: 1;
+    padding: 0.55rem 0.6rem;
+    background-color: var(--m-bg);
+    color: var(--m-fg);
+    border-radius: 2px;
+    box-shadow: var(--shadow-sleeve);
+  }
+
+  .xp-cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgb(255 255 255 / 0.1), transparent 4%, transparent 94%, rgb(0 0 0 / 0.18));
+  }
+
+  .xp-mark {
+    position: relative;
+    padding: 0.1rem 0.3rem 0;
+    background: var(--m-bg);
+    font-size: calc(var(--sw) * 0.26);
+    line-height: 0.82;
+    text-transform: none;
+  }
+
+  .xp-years {
+    position: relative;
+    padding: 0.15rem 0.35rem;
+    background: var(--m-bg);
+    font-size: max(0.6rem, calc(var(--sw) * 0.075));
+  }
+
+  .p-rings {
+    background-image: repeating-radial-gradient(circle at 78% 30%, var(--m-fg) 0 1.2px, transparent 1.4px 7px);
+  }
+
+  .p-dots {
+    background-image: radial-gradient(var(--m-fg) 1.6px, transparent 1.9px);
+    background-size: 9px 9px;
+  }
+
+  .p-mesh,
+  .p-stack {
+    background-image:
+      repeating-linear-gradient(45deg, var(--m-fg) 0 1px, transparent 1px 8px),
+      repeating-linear-gradient(-45deg, var(--m-fg) 0 1px, transparent 1px 8px);
+  }
+
+  /* The box set is thicker: three discs' worth of board behind the front. */
+  .p-stack {
+    box-shadow:
+      4px -4px 0 -1px var(--paper),
+      4px -4px 0 0 var(--m-bg),
+      8px -8px 0 -1px var(--paper),
+      8px -8px 0 0 var(--m-bg),
+      var(--shadow-sleeve);
+  }
+
+  .p-bsides {
+    --m-bg: var(--kraft);
+    --m-fg: #3a2a1a;
+    background-image: radial-gradient(circle at 50% 46%, transparent 23%, rgb(0 0 0 / 0.12) 23.5%, rgb(0 0 0 / 0.12) 24.5%, transparent 25%);
+  }
+
+  /* The crate's front board, in front of the sleeves. */
+  .xp-front {
+    position: relative;
+    z-index: 30;
+    display: grid;
+    justify-items: center;
+    gap: 0.5rem;
+    height: calc(var(--sw) * 0.62);
+    margin: calc(var(--sw) * var(--bury) * -1) -1rem 0;
+    padding-top: calc(var(--sw) * 0.1);
+    border-radius: 3px 3px 4px 4px;
+    background:
+      linear-gradient(180deg, rgb(255 255 255 / 0.12), transparent 8%),
+      repeating-linear-gradient(180deg, transparent 0 calc(var(--sw) * 0.2 - 1px), rgb(0 0 0 / 0.14) calc(var(--sw) * 0.2 - 1px) calc(var(--sw) * 0.2)),
+      var(--wood);
+    box-shadow:
+      inset 0.6rem 0 0 var(--wood-2),
+      inset -0.6rem 0 0 var(--wood-2),
+      0 18px 26px -18px rgb(0 0 0 / 0.55);
+    pointer-events: none;
+  }
+
+  .xp-hole {
+    width: calc(var(--sw) * 0.9);
+    height: calc(var(--sw) * 0.13);
+    border-radius: 999px;
+    background: var(--wood-edge);
+    box-shadow: inset 0 3px 4px rgb(0 0 0 / 0.45);
+  }
+
+  .xp-stencil {
+    color: var(--wood-edge);
+    font-size: max(0.55rem, calc(var(--sw) * 0.065));
+    letter-spacing: 0.22em;
+  }
+
+  /* Scroll in and the sleeves drop into the crate. Not a loop: gated on the
+     turntable playing and no reduced-motion preference; at rest they're settled. */
+  @keyframes settle {
+    from {
+      translate: 0 -40%;
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      :global(html[data-motion='playing']) .xp-row li {
+        animation: settle linear both;
+        animation-timeline: view();
+        animation-range: entry calc(10% + var(--i) * 6%) cover calc(28% + var(--i) * 4%);
+      }
+    }
+  }
+
+  /* ── The notes (layout lives on .panel-in, never on the hidden panel) ── */
+  .panel-in {
+    display: grid;
+    gap: 0.75rem;
+    align-content: start;
+    max-width: 44rem;
+  }
+
+  .xp-panels > .xp-panel + .xp-panel .panel-in {
+    margin-top: 2.5rem;
+  }
+
+  .xp[data-ready] .xp-panels > .xp-panel + .xp-panel .panel-in {
+    margin-top: 0;
+  }
+
+  .xp-panel:focus-visible {
+    outline-offset: 8px;
+  }
+
+  .r-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .r-year {
+    margin-left: 0.25rem;
+    color: var(--muted);
+    font-size: 0.74rem;
+  }
+
+  .r-role {
+    font-size: var(--step-2);
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    line-height: 1.12;
+  }
+
+  .r-org {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.15rem 0.5rem;
+    color: var(--ink-2);
+    font-size: var(--step--1);
+  }
+
+  .r-org a {
+    font-weight: 600;
+  }
+
+  .r-org .serif {
+    color: var(--muted);
+    font-size: 1.1em;
+  }
+
+  .r-sep {
+    color: var(--line);
+  }
+
+  .r-org .mono {
+    font-size: 0.78rem;
+  }
+
+  .r-about {
+    color: var(--muted);
+    font-size: var(--step--1);
+  }
+
+  .r-tracks {
+    display: grid;
+    gap: 0.55rem;
+    margin: 0.4rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .r-tracks li {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 0.5rem;
+    padding-top: 0.55rem;
+    border-top: 1px solid var(--line-soft);
+    font-size: var(--step--1);
+    line-height: 1.55;
+  }
+
+  .t-n {
+    padding-top: 0.15em;
+    color: var(--red-ink);
+    font-size: 0.7rem;
+  }
+
+  .discs {
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .disc-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 0.75rem;
+  }
+
+  .disc-no {
+    color: var(--red-ink);
+    font-size: 0.72rem;
+  }
+
+  .disc-role {
+    font-weight: 650;
+  }
+
+  .disc-dates {
+    color: var(--muted);
+    font-size: 0.74rem;
+  }
+
+  .r-credit {
+    color: var(--muted);
+  }
+
+  .bs-list {
+    display: grid;
+    gap: 1rem;
+    margin: 0.4rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .bs-list li {
+    display: grid;
+    gap: 0.2rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--line-soft);
+    font-size: var(--step--1);
+  }
+
+  .bs-when {
+    color: var(--muted);
+    font-size: 0.74rem;
+  }
+
+  .bs-note {
+    color: var(--ink-2);
+  }
+</style>

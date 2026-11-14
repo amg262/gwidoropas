@@ -1,0 +1,24 @@
+---
+/**
+ * The listening booth: the dark room at the back of the shop. Side B plays in
+ * here: the instruments, the gold records on the wall, and the coming-soon
+ * board. One .band wrapper, so everything inside inverts through the tokens.
+ */
+---
+
+<div class="booth band">
+  <slot />
+</div>
+
+<style>
+  .booth {
+    position: relative;
+    border-block: 1px solid var(--band-line);
+  }
+
+  /* Sections inside share the room: less air between them than out on the floor. */
+  .booth > :global(.section + .section),
+  .booth > :global(.sideb + .section) {
+    padding-top: 0;
+  }
+</style>

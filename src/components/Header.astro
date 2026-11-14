@@ -6,7 +6,9 @@ const path = Astro.url.pathname;
 const onHome = path === '/' || path === '/index' || path === '/index.html';
 const base = onHome ? '' : '/';
 
+/* In the order you walk the shop floor. The track numbers only show in the Browse menu. */
 const links = [
+  { href: `${base}#about`, track: 'A1', label: 'About' },
   { href: `${base}#experience`, track: 'A2', label: 'Experience' },
   { href: `${base}#work`, track: 'A3', label: 'Work', match: '/work' },
   { href: `${base}#skills`, track: 'B1', label: 'Skills' },
@@ -30,24 +32,47 @@ const links = [
           links.map((l) => (
             <li>
               <a href={l.href} aria-current={l.match && path.startsWith(l.match) ? 'page' : undefined}>
-                <span class="mono t-no">{l.track}</span>
-                <span class="t-label">{l.label}</span>
+                {l.label}
               </a>
             </li>
           ))
         }
       </ul>
+      <button class="browse-btn wide" type="button" popovertarget="browse">Browse</button>
       <a class="btn resume-btn" href={site.resume.href} aria-current={path.startsWith('/resume') ? 'page' : undefined}>Résumé</a>
     </nav>
+    <div id="browse" class="browse" popover aria-label="Browse the shop">
+      <p class="wide browse-k">Browse the bins</p>
+      <ul>
+        {
+          links.map((l) => (
+            <li>
+              <a href={l.href} aria-current={l.match && path.startsWith(l.match) ? 'page' : undefined}>
+                <span class="mono b-no">{l.track}</span>
+                <span>{l.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
   </div>
 </header>
+
+<script>
+  // Jumping to a section on the same page doesn't dismiss a popover on its own.
+  const browse = document.getElementById('browse');
+  browse?.addEventListener('click', (e) => {
+    if ((e.target as Element).closest('a')) browse.hidePopover();
+  });
+</script>
 
 <style>
   .site-header {
     position: sticky;
     top: 0;
     z-index: 50;
-    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    background: color-mix(in srgb, var(--paper) 90%, transparent);
     backdrop-filter: saturate(1.3) blur(12px);
     -webkit-backdrop-filter: saturate(1.3) blur(12px);
     border-bottom: 1px solid var(--line);
@@ -58,7 +83,7 @@ const links = [
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    min-height: 4.25rem;
+    min-height: 4rem;
   }
 
   .brand {
@@ -83,23 +108,23 @@ const links = [
   }
 
   .brand-label {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
   }
 
   .brand-name {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: var(--muted);
   }
 
   nav {
     display: flex;
     align-items: center;
-    gap: clamp(0.75rem, 0.2rem + 1.4vw, 1.75rem);
+    gap: clamp(0.6rem, 0.2rem + 1.2vw, 1.75rem);
   }
 
   .tracks {
     display: none;
-    gap: clamp(0.5rem, 0.1rem + 1vw, 1.5rem);
+    gap: clamp(0.75rem, 0.2rem + 1.2vw, 1.6rem);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -112,29 +137,95 @@ const links = [
   }
 
   .tracks a {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0.4rem;
-    padding: 0.4rem 0.1rem;
+    display: inline-block;
+    padding: 0.4rem 0;
+    color: var(--ink-2);
     text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: 0.86rem;
   }
 
-  .t-no {
-    font-size: 0.68rem;
-    color: var(--red-ink);
-  }
-
-  .tracks a:hover .t-label,
-  .tracks a[aria-current='page'] .t-label {
+  .tracks a:hover,
+  .tracks a[aria-current='page'] {
+    color: var(--ink);
     text-decoration: underline;
     text-decoration-color: var(--red);
-    text-decoration-thickness: 2px;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.35em;
   }
 
   .resume-btn {
     min-height: 2.5rem;
     padding: 0.7em 1.15em;
+  }
+
+  /* ── Phones: a Browse button opens the crate dividers ── */
+  .browse-btn,
+  .browse {
+    display: none;
+  }
+
+  @supports selector(:popover-open) {
+    @media (max-width: 61.99rem) {
+      .browse-btn {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.5rem;
+        padding: 0 0.25rem;
+        border: 0;
+        background: none;
+        color: var(--ink);
+        text-decoration: underline;
+        text-decoration-color: var(--red);
+        text-underline-offset: 0.4em;
+      }
+    }
+
+    .browse:popover-open {
+      display: grid;
+      gap: 0.75rem;
+      position: fixed;
+      inset: 4.6rem var(--gutter) auto auto;
+      width: min(17rem, calc(100vw - 2 * var(--gutter)));
+      margin: 0;
+      padding: 1rem;
+      border: 1px solid var(--ink);
+      border-radius: 6px;
+      background: var(--card);
+      color: var(--ink);
+      box-shadow: 0 24px 40px -20px rgb(0 0 0 / 0.45);
+    }
+
+    .browse::backdrop {
+      background: rgb(22 19 15 / 0.18);
+    }
+  }
+
+  .browse-k {
+    color: var(--muted);
+  }
+
+  .browse ul {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Each link a divider card's tab. */
+  .browse a {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    min-height: 2.9rem;
+    border-top: 1px solid var(--line);
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 1.05rem;
+  }
+
+  .b-no {
+    min-width: 1.7rem;
+    color: var(--red-ink);
+    font-size: 0.72rem;
   }
 </style>

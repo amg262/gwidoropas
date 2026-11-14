@@ -97,6 +97,7 @@ const robots = unlisted ? UNLISTED_ROBOTS : noindex ? 'noindex' : null;
     <Font cssVariable="--font-sans" preload={[{ style: 'normal', subset: 'latin' }]} />
     <Font cssVariable="--font-serif" preload={[{ style: 'italic', subset: 'latin' }]} />
     <Font cssVariable="--font-mono" />
+    <Font cssVariable="--font-hand" />
 
     {structuredData.map((data) => <script is:inline type="application/ld+json" set:html={JSON.stringify(data)} />)}
 
@@ -141,10 +142,11 @@ const robots = unlisted ? UNLISTED_ROBOTS : noindex ? 'noindex' : null;
 </html>
 
 <style>
+  /* Quiet now: a hairline note on the paper, like the strip on a promo pressing.
+     (resume.astro's print CSS hides it by this class name.) */
   .promo-strip {
-    background: var(--mustard);
-    color: #16130f;
-    border-bottom: 1px solid #16130f;
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
   }
 
   .promo-run {
@@ -152,12 +154,15 @@ const robots = unlisted ? UNLISTED_ROBOTS : noindex ? 'noindex' : null;
     flex-wrap: wrap;
     justify-content: center;
     gap: 0.25rem 0.9rem;
-    padding: 0.45rem var(--gutter);
-    font-size: 0.7rem;
-    font-weight: 500;
+    padding: 0.4rem var(--gutter);
+    font-size: 0.66rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     text-align: center;
+  }
+
+  .promo-run [aria-hidden] {
+    color: var(--red-ink);
   }
 
   :global(html:not([data-motion]) .motion-toggle) {

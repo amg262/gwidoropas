@@ -50,7 +50,7 @@ export interface Release {
   resumeBullets?: string[];
   /** A credit line, e.g. who led the brand. */
   credit?: string;
-  /** Show in the "Now playing" ticker. */
+  /** Show in the hero's "Now playing" card. */
   nowPlaying?: boolean;
   /** For box sets: one disc per role at the same company. */
   discs?: Disc[];
@@ -168,9 +168,9 @@ export const site = {
     intro: `Marketing intern at Amarna, a Milwaukee AI software company. Events and design for Peyton Pours. ${capitalize(plant)} inside a B2B manufacturer. BAS in Digital Marketing in progress.`,
   },
 
-  /** Status line in the booking section and the ticker. Set to null to hide. */
+  /** Status line in the booking section and the hero's "Now playing" card. Set to null to hide. */
   availability: 'Open to coordinator roles in marketing technology, marketing operations, CRM and creative · Greater Milwaukee',
-  /** The same thing, short enough for the ticker. */
+  /** The same thing, short enough for the "Now playing" card. */
   availabilityShort: 'Coordinator roles · Greater Milwaukee',
 
   location: {

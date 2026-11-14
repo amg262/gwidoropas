@@ -1,7 +1,9 @@
 ---
 /**
- * A4 · On the record: recommendations, set like a review clipped from the
- * music press. Quoted word for word from LinkedIn (see site.recommendations).
+ * A4 · Staff pick: recommendations, written up the way a record shop pins a
+ * hand-lettered card beside a record it loves. Quoted word for word from
+ * LinkedIn (see site.recommendations): the opening paragraph on the card, the
+ * rest a click away.
  */
 import SectionHead from '@/components/SectionHead.astro';
 import Icon from '@/components/Icon.astro';
@@ -19,47 +21,54 @@ const n = recommendations.length;
           <p>In their words, not mine.</p>
         </SectionHead>
 
-        <div class="reviews">
+        <div class="picks">
           {recommendations.map((r) => {
             const [lede, ...body] = r.paragraphs;
             return (
-              <figure class="review">
-                <p class="rv-mast">
-                  <span class="wide">Recommendation</span>
-                  <span class="mono">
+              <figure class="pick">
+                <span class="pin" aria-hidden="true" />
+                <p class="pk-head">
+                  <span class="hand pk-k">Staff pick</span>
+                  <span class="mono pk-date">
                     {r.url && 'LinkedIn · '}
                     {formatYm(r.date)}
                   </span>
                 </p>
 
-                <blockquote class="rv-quote">
-                  <p class="serif rv-lede">
-                    <span class="rv-open" aria-hidden="true">
-                      “
-                    </span>
+                <blockquote class="pk-quote">
+                  <p class="hand pk-lede">
+                    <span aria-hidden="true">“</span>
                     {lede}
+                    {body.length === 0 && <span aria-hidden="true">”</span>}
                   </p>
                   {body.length > 0 && (
-                    <div class="rv-body">
-                      {body.map((p) => (
-                        <p>{p}</p>
-                      ))}
-                    </div>
+                    <details class="pk-more">
+                      <summary class="link-arrow">
+                        <span class="pk-open">Read the full recommendation</span>
+                        <span class="pk-close">Fold it back up</span>
+                        <Icon name="arrow-down" />
+                      </summary>
+                      <div class="pk-body">
+                        {body.map((p) => (
+                          <p>{p}</p>
+                        ))}
+                      </div>
+                    </details>
                   )}
                 </blockquote>
 
-                <figcaption class="rv-by">
-                  <span class="rv-mark" style={`--mark-bg:${r.mark.bg};--mark-fg:${r.mark.fg}`} aria-hidden="true">
+                <figcaption class="pk-by">
+                  <span class="pk-mark" style={`--mark-bg:${r.mark.bg};--mark-fg:${r.mark.fg}`} aria-hidden="true">
                     <span class="display">{monogram(r.name)}</span>
                   </span>
-                  <span class="rv-who">
-                    <span class="display rv-name">{r.name}</span>
-                    <span class="rv-role">{r.role}</span>
-                    {r.about && <span class="rv-about">{r.about}</span>}
-                    <span class="rv-rel">{r.relationship}</span>
+                  <span class="pk-who">
+                    <span class="display pk-name">{r.name}</span>
+                    <span class="pk-role">{r.role}</span>
+                    {r.about && <span class="pk-about">{r.about}</span>}
+                    <span class="pk-rel">{r.relationship}</span>
                   </span>
                   {r.url && (
-                    <a class="btn btn-ghost rv-link" href={r.url} target="_blank" rel="noopener">
+                    <a class="btn btn-ghost pk-link" href={r.url} target="_blank" rel="noopener">
                       <Icon name="linkedin" /> Read it on LinkedIn
                     </a>
                   )}
@@ -74,169 +83,181 @@ const n = recommendations.length;
 }
 
 <style>
-  .reviews {
+  .picks {
     display: grid;
-    gap: clamp(2rem, 1.5rem + 2vw, 3rem);
+    gap: clamp(2.5rem, 2rem + 2vw, 4rem);
+    justify-items: center;
   }
 
-  /* A clipping from the music press: card stock, a double-ruled masthead. */
-  .review {
-    padding: clamp(1.4rem, 0.8rem + 3vw, 3.5rem);
-    background: var(--card);
-    border-radius: 3px;
-    box-shadow: var(--shadow-sleeve);
+  /* An index card pinned to the wall: ruled, a red head line, a little askew.
+     A physical object, so it keeps its colours in the dark scheme too. */
+  .pick {
+    --rule: 2.1rem;
+    position: relative;
+    width: min(100%, 50rem);
+    padding: clamp(1.6rem, 1rem + 2vw, 2.6rem) clamp(1.25rem, 0.5rem + 3vw, 3rem) clamp(1.5rem, 1rem + 1.5vw, 2.25rem);
+    background:
+      linear-gradient(transparent calc(var(--top, 4.6rem) - 1px), rgb(224 69 43 / 0.55) calc(var(--top, 4.6rem) - 1px) var(--top, 4.6rem), transparent var(--top, 4.6rem)),
+      repeating-linear-gradient(transparent 0 calc(var(--rule) - 1px), rgb(42 71 192 / 0.13) calc(var(--rule) - 1px) var(--rule)) 0 calc(var(--top, 4.6rem) + 0.15rem) / 100% 100% no-repeat,
+      #f7f2e8;
+    color: #16130f;
+    box-shadow:
+      0 1px 0 rgb(0 0 0 / 0.04),
+      0 24px 40px -24px rgb(30 20 10 / 0.55),
+      0 4px 10px -6px rgb(30 20 10 / 0.3);
+    rotate: -0.8deg;
+    --ink: #16130f;
+    --ink-2: #3a352e;
+    --muted: #625b4f;
+    --line: #cfc4ae;
+    --red-ink: #b3321c;
   }
 
-  .rv-mast {
+  .pin {
+    position: absolute;
+    top: 0.7rem;
+    left: 50%;
+    width: 0.95rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ff8166, #e0452b 45%, #9c2a17);
+    box-shadow: 0 3px 4px rgb(0 0 0 / 0.35);
+    translate: -50% 0;
+  }
+
+  .pk-head {
     display: flex;
     flex-wrap: wrap;
+    align-items: baseline;
     justify-content: space-between;
-    gap: 0.5rem 1.5rem;
-    padding-bottom: 0.8rem;
-    border-bottom: 4px double var(--ink);
+    gap: 0.5rem 1rem;
+    min-height: calc(var(--top, 4.6rem) - clamp(1.6rem, 1rem + 2vw, 2.6rem) - 0.4rem);
   }
 
-  .rv-mast .mono {
+  .pk-k {
+    color: #b3321c;
+    font-size: clamp(1.9rem, 1.6rem + 1vw, 2.4rem);
+    rotate: -2deg;
+  }
+
+  .pk-date {
     color: var(--muted);
-    font-size: 0.74rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
   }
 
-  /* Stacked on phones and tablets; the lede beside the column on wide screens. */
-  .rv-quote {
+  .pk-quote {
+    margin-top: 0.4rem;
+  }
+
+  /* Written on the ruled lines. */
+  .pk-lede {
+    font-size: clamp(1.45rem, 1.2rem + 0.9vw, 1.85rem);
+    line-height: var(--rule);
+    color: #16130f;
+    text-wrap: pretty;
+  }
+
+  .pk-more {
+    margin-top: 1rem;
+  }
+
+  .pk-more summary {
+    display: inline-flex;
+    width: fit-content;
+    text-wrap: balance;
+    cursor: pointer;
+    color: #b3321c;
+    list-style: none;
+  }
+
+  .pk-more summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .pk-more summary :global(svg) {
+    transition: rotate 0.25s var(--ease);
+  }
+
+  .pk-more[open] summary :global(svg) {
+    rotate: 180deg;
+  }
+
+  .pk-close,
+  .pk-more[open] .pk-open {
+    display: none;
+  }
+
+  .pk-more[open] .pk-close {
+    display: inline;
+  }
+
+  .pk-body {
     display: grid;
-    gap: clamp(1.75rem, 1.25rem + 1.5vw, 2.5rem);
-    margin: clamp(1.75rem, 1.25rem + 1.5vw, 2.5rem) 0 0;
-  }
-
-  @media (min-width: 64rem) {
-    .rv-quote {
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-      align-items: start;
-      column-gap: clamp(2.5rem, 1rem + 3vw, 4.5rem);
-    }
-  }
-
-  /* The big red quote mark sits in the room the padding leaves above the first line. */
-  .rv-lede {
-    position: relative;
-    max-width: 30ch;
-    padding-top: 0.95em;
-    font-size: clamp(1.75rem, 1.05rem + 2.5vw, 3rem);
-    line-height: 1.08;
-  }
-
-  .rv-open {
-    position: absolute;
-    top: 0;
-    left: -0.03em;
-    font-size: 2.3em;
-    line-height: 0.75;
-    color: var(--red);
-  }
-
-  /* Set as a newspaper column: justified, a hairline rule beside it. */
-  .rv-body {
-    columns: 2 18rem;
-    column-gap: 2.5rem;
-    column-rule: 1px solid var(--line);
+    gap: 0.9rem;
+    margin-top: 1rem;
+    padding: 1.1rem 1.25rem;
+    background: rgb(255 255 255 / 0.6);
     color: var(--ink-2);
-    line-height: 1.65;
-    hyphens: auto;
+    font-size: var(--step--1);
+    line-height: 1.7;
   }
 
-  @media (min-width: 40rem) {
-    .rv-body {
-      text-align: justify;
-    }
-  }
-
-  @media (min-width: 64rem) {
-    .rv-body {
-      columns: auto;
-      padding-left: clamp(2rem, 1rem + 2vw, 3rem);
-      border-left: 1px solid var(--line);
-    }
-  }
-
-  .rv-body p {
-    break-inside: avoid-column;
-  }
-
-  .rv-body p + p {
-    margin-top: 1em;
-  }
-
-  .rv-by {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+  .pk-by {
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 1rem 1.1rem;
-    margin-top: clamp(2rem, 1.5rem + 1.5vw, 2.75rem);
-    padding-top: 1.25rem;
+    margin-top: 1.6rem;
+    padding-top: 1.1rem;
     border-top: 1px solid var(--line);
   }
 
-  @media (min-width: 46rem) {
-    .rv-by {
-      grid-template-columns: auto minmax(0, 1fr) auto;
-    }
-  }
-
-  /* The reviewer's own little record: grooved vinyl, their initials on the label. */
-  .rv-mark {
+  .pk-mark {
     display: grid;
     place-items: center;
-    width: 3.6rem;
+    flex: none;
+    width: 3.1rem;
     aspect-ratio: 1;
     border-radius: 50%;
-    background:
-      radial-gradient(circle, var(--mark-bg) 0 54%, transparent 55%),
-      repeating-radial-gradient(circle, rgb(255 255 255 / 0.07) 0 1px, transparent 1px 3px),
-      var(--vinyl);
-    box-shadow: 0 6px 14px -8px rgb(0 0 0 / 0.6);
-  }
-
-  .rv-mark .display {
+    background: radial-gradient(circle, var(--mark-bg) 0 54%, #0e0d0b 55%);
     color: var(--mark-fg);
-    font-size: 1rem;
-    line-height: 1;
+    box-shadow: 0 4px 8px -4px rgb(0 0 0 / 0.5);
   }
 
-  .rv-who {
+  .pk-mark .display {
+    font-size: 0.8rem;
+  }
+
+  .pk-who {
     display: grid;
-    gap: 0.15rem;
+    gap: 0.1rem;
+    flex: 1 1 18rem;
   }
 
-  .rv-name {
-    font-size: var(--step-2);
+  .pk-name {
+    font-size: 1.35rem;
   }
 
-  .rv-role {
+  .pk-role {
     font-weight: 600;
-    line-height: 1.3;
+    font-size: 0.92rem;
   }
 
-  .rv-about {
-    color: var(--ink-2);
-    font-size: var(--step--1);
-    line-height: 1.4;
-  }
-
-  .rv-rel {
+  .pk-about,
+  .pk-rel {
     color: var(--muted);
-    font-size: var(--step--1);
-    line-height: 1.4;
+    font-size: 0.8rem;
   }
 
-  .rv-link {
-    grid-column: 1 / -1;
-    justify-self: start;
+  .pk-link {
+    --btn-fg: #16130f;
+    --btn-bd: #16130f;
   }
 
-  @media (min-width: 46rem) {
-    .rv-link {
-      grid-column: auto;
+  @media (prefers-reduced-motion: reduce) {
+    .pk-more summary :global(svg) {
+      transition: none;
     }
   }
 </style>

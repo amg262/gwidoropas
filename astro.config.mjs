@@ -94,6 +94,14 @@ export default defineConfig({
       options: { variants: staticVariants('instrument-serif', ['400'], ['normal', 'italic']) },
     },
     {
+      /* Hand-lettered cards only (staff pick, price tags, the coming-soon board). One weight. */
+      provider: fontProviders.local(),
+      name: 'Caveat',
+      cssVariable: '--font-hand',
+      fallbacks: ['Bradley Hand', 'Segoe Print', 'cursive'],
+      options: { variants: staticVariants('caveat', ['600'], ['normal']) },
+    },
+    {
       provider: fontProviders.local(),
       name: 'DM Mono',
       cssVariable: '--font-mono',

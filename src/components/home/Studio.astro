@@ -1,4 +1,9 @@
 ---
+/**
+ * B3 · In the studio: the shop's felt letterboard of what's coming soon.
+ * Each take shows its stage on a little four-LED meter. When a take is
+ * mastered, it moves up into the record proper.
+ */
 import SectionHead from '@/components/SectionHead.astro';
 import { site } from '@/data/site';
 
@@ -18,99 +23,152 @@ const STAGES = [
           <p>What I’m working on right now. When a take is mastered, it moves up into the record proper.</p>
         </SectionHead>
 
-        <ol class="takes">
-          {site.studio.map((s, i) => {
-            const stage = STAGES[s.stage - 1]!;
-            return (
-              <li class="take">
-                <p class="mono take-no">Take {String(i + 1).padStart(2, '0')}</p>
-                <div class="take-main">
-                  <h3>{s.title}</h3>
-                  <p>{s.detail}</p>
-                </div>
-                <div class="take-meter">
-                  <div class="meter" aria-hidden="true">
-                    {STAGES.map((_, j) => (
-                      <span class:list={['seg', { on: j < s.stage, live: j === s.stage - 1 && s.stage < 4 }]} />
-                    ))}
+        <div class="board">
+          <p class="display board-title" aria-hidden="true">
+            {[...'Coming soon'].map((ch) => (ch === ' ' ? <span class="gap" /> : <span class="tile">{ch}</span>))}
+          </p>
+          <ol class="takes">
+            {site.studio.map((s, i) => {
+              const stage = STAGES[s.stage - 1]!;
+              return (
+                <li class="take">
+                  <p class="mono take-no">Take {String(i + 1).padStart(2, '0')}</p>
+                  <div class="take-main">
+                    <h3 class="display">{s.title}</h3>
+                    <p>{s.detail}</p>
                   </div>
-                  <p class="mono take-stage">
-                    <span class="stage-name">{stage.name}</span> · {stage.plain}
-                    {s.eta && <> · ETA {s.eta}</>}
-                  </p>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+                  <div class="take-meter">
+                    <div class="meter" aria-hidden="true">
+                      {STAGES.map((_, j) => (
+                        <span class:list={['seg', { on: j < s.stage, live: j === s.stage - 1 && s.stage < 4 }]} />
+                      ))}
+                    </div>
+                    <p class="mono take-stage">
+                      <span class="stage-name">{stage.name}</span> · {stage.plain}
+                      {s.eta && <> · ETA {s.eta}</>}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
       </div>
     </section>
   )
 }
 
 <style>
+  /* A black felt letterboard in a thin oak frame. Physical: fixed colours. */
+  .board {
+    padding: clamp(1.25rem, 0.75rem + 2.5vw, 2.75rem);
+    border-radius: 4px;
+    background:
+      repeating-linear-gradient(180deg, rgb(255 255 255 / 0.035) 0 1px, transparent 1px 7px),
+      #141210;
+    color: #efe8da;
+    box-shadow:
+      inset 0 0 0 7px #a07650,
+      inset 0 0 0 8px #6d4e33,
+      inset 0 0 30px rgb(0 0 0 / 0.6),
+      0 24px 40px -24px rgb(0 0 0 / 0.9);
+  }
+
+  /* Pushed-in plastic letters, each sitting a hair off true. */
+  .board-title {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.06em;
+    margin-bottom: clamp(1rem, 0.5rem + 1.5vw, 1.75rem);
+    font-size: clamp(2rem, 1.4rem + 2.6vw, 3.6rem);
+    line-height: 1;
+    color: #f4efe4;
+    text-shadow: 0 2px 0 rgb(0 0 0 / 0.5);
+  }
+
+  .tile:nth-child(3n) {
+    translate: 0 0.03em;
+  }
+  .tile:nth-child(4n + 1) {
+    rotate: -1.5deg;
+  }
+  .tile:nth-child(5n + 2) {
+    rotate: 1.2deg;
+  }
+
+  .gap {
+    width: 0.35em;
+  }
+
   .takes {
     margin: 0;
     padding: 0;
     list-style: none;
-    border-top: 1px solid var(--line);
   }
 
   .take {
     display: grid;
-    gap: 0.75rem 2rem;
-    padding-block: 1.5rem;
-    border-bottom: 1px solid var(--line);
+    gap: 0.4rem 2rem;
+    padding-block: 1rem;
+    border-top: 1px solid rgb(239 232 218 / 0.12);
   }
 
-  @media (min-width: 52rem) {
+  @media (min-width: 48rem) {
     .take {
-      grid-template-columns: 6rem minmax(0, 1fr) 17rem;
+      grid-template-columns: 5rem minmax(0, 1fr) 14rem;
       align-items: center;
     }
   }
 
   .take-no {
-    font-size: 0.78rem;
-    color: var(--red-ink);
+    color: #e9b13b;
+    font-size: 0.72rem;
+  }
+
+  .take-main {
+    display: grid;
+    gap: 0.25rem;
   }
 
   .take-main h3 {
-    font-size: var(--step-1);
-    line-height: 1.2;
+    font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.6rem);
+    line-height: 1;
+    letter-spacing: 0.01em;
   }
 
   .take-main p {
-    margin-top: 0.3rem;
-    color: var(--ink-2);
+    color: #b5ab99;
+    font-size: var(--step--1);
   }
 
   .take-meter {
     display: grid;
-    gap: 0.5rem;
+    gap: 0.45rem;
   }
 
   .meter {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 4px;
-    padding: 4px;
-    background: var(--ink);
+    gap: 3px;
+    padding: 3px;
+    background: #0a0908;
     border-radius: 3px;
+    box-shadow: inset 0 0 0 1px rgb(239 232 218 / 0.1);
   }
 
   .seg {
-    height: 0.65rem;
+    height: 0.5rem;
     border-radius: 1px;
-    background: color-mix(in srgb, var(--paper) 14%, transparent);
+    background: #2b2620;
   }
 
   .seg.on {
-    background: var(--mustard);
+    background: #e9b13b;
+    box-shadow: 0 0 6px rgb(233 177 59 / 0.45);
   }
 
   .seg.on:nth-child(4) {
-    background: var(--red);
+    background: #f0583c;
   }
 
   .seg.live {
@@ -134,12 +192,12 @@ const STAGES = [
   }
 
   .take-stage {
-    font-size: 0.76rem;
-    color: var(--muted);
+    font-size: 0.7rem;
+    color: #b5ab99;
   }
 
   .stage-name {
-    color: var(--ink);
+    color: #efe8da;
     text-transform: uppercase;
   }
 </style>

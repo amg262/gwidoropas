@@ -1,9 +1,10 @@
 ---
+/** The booth door: flip the record. The one other poster-sized moment on the page. */
 import Record from '@/components/Record.astro';
 import { site, catalog } from '@/data/site';
 ---
 
-<section class="sideb band" aria-label="Side B">
+<section class="sideb" aria-label="Side B">
   <div class="container sb-inner">
     <p class="display sb-title" aria-hidden="true">Side <span>B</span></p>
     <p class="serif sb-note">Flip it over: the instruments, the training, what’s in the studio right now, and how to book a session.</p>
@@ -15,19 +16,19 @@ import { site, catalog } from '@/data/site';
   .sideb {
     position: relative;
     overflow: hidden;
-    padding-block: clamp(4rem, 3rem + 5vw, 8rem);
+    padding-block: clamp(4rem, 3rem + 4vw, 7rem) clamp(3rem, 2rem + 3vw, 5rem);
   }
 
   .sb-inner {
     position: relative;
     z-index: 2;
     display: grid;
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
 
   .sb-title {
-    font-size: clamp(6rem, 2rem + 18vw, 17rem);
-    line-height: 0.78;
+    font-size: clamp(5rem, 2rem + 12vw, 12rem);
+    line-height: 0.8;
   }
 
   .sb-title span {
@@ -36,26 +37,26 @@ import { site, catalog } from '@/data/site';
 
   .sb-note {
     max-width: 24ch;
-    font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.4rem);
-    line-height: 1.1;
+    font-size: clamp(1.35rem, 1.05rem + 1.2vw, 2rem);
+    line-height: 1.12;
     color: var(--band-muted);
   }
 
   .sideb :global(.sb-record) {
     position: absolute;
     top: 50%;
-    right: -18%;
-    width: min(62vw, 46rem);
+    right: -14%;
+    width: min(52vw, 38rem);
     translate: 0 -50%;
     z-index: 1;
-    opacity: 0.95;
+    opacity: 0.9;
   }
 
   @media (max-width: 40rem) {
     .sideb :global(.sb-record) {
-      right: -45%;
-      width: 95vw;
-      opacity: 0.55;
+      right: -48%;
+      width: 92vw;
+      opacity: 0.45;
     }
   }
 </style>

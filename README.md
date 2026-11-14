@@ -16,9 +16,21 @@
 
 It's designed as the catalogue of an imaginary mid-century record label: his career is the debut LP (RR-001), case studies are releases, experience is the discography, skills are the liner-note credits.
 
+The home page is laid out like a walk through a small record shop, on one rule: **quiet room, loud records.** The architecture is paper, ink and hairlines, and colour lives only on the sleeves, the stickers and one red accent:
+
+| Room | Section | What it is |
+| --- | --- | --- |
+| The window | Hero | The debut LP face-out on a ledge, wearing a Japanese *obi* strip, the record half out and turning. A "now playing" card lists what's current. |
+| Liner notes | About | The back cover: a taped-up print, the pull quote, the notes, and three things to know with the number behind each. |
+| The crate | Experience | Each role is a sleeve standing in a record crate. Pull one up to read its notes. |
+| New arrivals | Selected work | The case studies face-out on the wall, each with a hand-lettered shelf tag showing its headline number. |
+| Staff pick | Recommendations | A pinned, hand-lettered index card. The full text opens underneath. |
+| The listening booth | Skills, education, in progress | The dark room behind the Side B door: credits, gold records on the wall, and a felt "coming soon" letterboard. |
+| The counter | Contact | The ticket. |
+
 Built with [Astro](https://astro.build), fully static. Production runs on [Vercel](https://vercel.com); every release is also published as a versioned, multi-arch **container image** on GHCR that behaves identically and runs anywhere.
 
-> **The site ships as an unlisted advance copy.** A mustard strip across the top reads *Advance promo copy · Not for sale*, because the words are a first draft taken from Gwido's résumés and launch plan, and the plan says Gwido owns every word. Separately, the site is **unlisted**: anyone with the link can open it, but search engines, AI crawlers and web archives are kept out (see [Who can find it](#who-can-find-it)). These are two switches in `src/data/site.ts`: `advanceCopy` and `visibility`.
+> **The site ships as an unlisted advance copy.** A hairline strip across the top reads *Advance promo copy · Not for sale*, and the hero sleeve carries a red *Promotional copy · Not for sale* rubber stamp, because the words are a first draft taken from Gwido's résumés and launch plan, and the plan says Gwido owns every word. Separately, the site is **unlisted**: anyone with the link can open it, but search engines, AI crawlers and web archives are kept out (see [Who can find it](#who-can-find-it)). These are two switches in `src/data/site.ts`: `advanceCopy` and `visibility`.
 
 ---
 
@@ -77,7 +89,7 @@ Almost everything lives in two places.
 Name, headline, photo, about, experience, education, skills, studio items and contact. The home page, the printable résumé at `/resume`, the link previews and the structured data are all pressed from this one file, so they never drift apart.
 
 - **Tenure stays true automatically.** Phrases like "almost six years" and "5+" are computed from `PLANT_START` at build time.
-- **"Now playing"** (the yellow ticker) is derived: roles with `nowPlaying: true` and no end date, plus credentials still `pressing`.
+- **"Now playing"** (the card under the hero turntable) is derived: roles with `nowPlaying: true` and no end date, credentials still `pressing`, and `availabilityShort`.
 - **`bullets` vs `resumeBullets`:** the home page shows the full bullets; the one-page printable résumé uses the shorter "radio edit" when one is given.
 - **`portrait`:** the back-cover photo beside the liner notes, also the `image` in the structured data. Astro turns it into AVIF/WebP/JPEG at three sizes (about 12 kB for most visitors). It is deliberately **not** on the printable résumé: US hiring norms advise against photos on résumés. Set it to `null` to hide it.
 - **Phone number** is `null` on purpose so it isn't scraped from the public site.
@@ -246,12 +258,12 @@ If the package is private, add `--registry-server ghcr.io --registry-username <g
 | Concern | Choice | Why |
 | --- | --- | --- |
 | Framework | Astro 7, fully static | A portfolio is content, not an app: fastest, cheapest, most robust. |
-| Type | Archivo variable (weight **and** width axes), Instrument Serif, DM Mono, self-hosted via Astro's Fonts API | One Archivo file gives condensed poster cuts (`font-stretch: 62%`), expanded label caps (`125%`) and body text. Preloaded, metric-matched fallbacks. |
+| Type | Archivo variable (weight **and** width axes), Instrument Serif, DM Mono, Caveat (one weight), self-hosted via Astro's Fonts API | One Archivo file gives condensed poster cuts (`font-stretch: 62%`), expanded label caps (`125%`) and body text; the serif sets section titles. Caveat is the marker on the shop's cards only (staff pick, shelf tags) and isn't preloaded. |
 | Art | Generative SVG covers (`src/lib/cover.ts`), SVG vinyl (`Record.astro`) | Crisp at any size, tiny, and the same function feeds the share images. |
 | Photo | `astro:assets` `<Picture>`: AVIF → WebP → JPEG at 240/360/483 px | ~12 kB for most visitors; lazy-loaded below the fold. |
 | Link previews | Satori + Sharp at build time | Each page gets a 1200×630 card that looks like its sleeve. Static Archivo cuts live in `src/assets/og-fonts/` (OFL) because Satori can't read variable fonts. The README record is pressed the same way. |
-| Motion | CSS only; 33⅓ rpm records, ticker, equalizers | A "Stop the record" button pauses every loop (WCAG 2.2.2); reduced-motion users start paused. |
-| JavaScript | Copy-email button, motion toggle, print button, analytics | That's all. |
+| Motion | CSS only; 33⅓ rpm records, equalizers, crate sleeves that settle on scroll | A "Stop the record" button pauses every loop (WCAG 2.2.2); reduced-motion users start paused, and the scroll-driven settle only runs while the record is playing. |
+| JavaScript | The crate (upgrades links into ARIA tabs; find-in-page still reaches hidden notes via `hidden="until-found"`), copy-email button, motion toggle, mobile Browse menu (Popover API), print button, analytics | Everything works without it: with JS off the crate is a list of links and every set of notes is shown. |
 | Hosting | Vercel (production) + a container image on GHCR | Vercel for zero-ops previews and the edge; the image so the site isn't locked to one host. One header contract (`vercel.json`) for both. |
 | CI/CD | GitHub Actions: verify → container contract test → semver release | Every merge is tested the way production behaves, versioned, attested and reproducible. |
 
@@ -262,10 +274,12 @@ src/
 ├── content/work/           ← releases (case studies, Markdown)
 ├── content.config.ts       ← release schema
 ├── components/
-│   ├── home/               ← Hero, Ticker, LinerNotes, Discography, Releases,
-│   │                         SideB, Personnel, Certified, Studio, Booking
+│   ├── home/               ← Hero, LinerNotes, Crate, Releases, OnTheRecord,
+│   │                         Booth (SideB, Personnel, Certified, Studio), Booking
 │   ├── Record.astro        ← the spinning LP
-│   ├── Sleeve.astro        ← album cover + typography
+│   ├── Sleeve.astro        ← album cover + typography (optional obi)
+│   ├── Obi.astro           ← the paper band with the title in vertical type
+│   ├── SectionHead.astro   ← the crate-divider tab that heads each section
 │   └── …                   ← Header, Footer, LabelMark, ReleaseCard, MotionToggle
 ├── lib/                    ← cover art, OG renderer, date helpers,
 │                             visibility.ts (unlisted vs public)

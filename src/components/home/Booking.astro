@@ -46,15 +46,19 @@ import { site, linkedin, catalog } from '@/data/site';
 
     <div class="tk-actions">
       <a class="btn" href={`mailto:${site.contact.email}`}><Icon name="mail" /> Email Gwido</a>
-      <CopyEmail email={site.contact.email} />
-      {
-        linkedin && (
-          <a class="btn btn-ghost" href={linkedin.href} rel="me noopener" target="_blank">
-            <Icon name="linkedin" /> LinkedIn
-          </a>
-        )
-      }
-      <a class="btn btn-ghost" href={site.resume.href}><Icon name="printer" /> Résumé</a>
+      <span class="tk-links">
+        <CopyEmail email={site.contact.email} class="link-arrow tk-link" />
+        {
+          linkedin && (
+            <a class="link-arrow tk-link" href={linkedin.href} rel="me noopener" target="_blank">
+              <Icon name="linkedin" /> LinkedIn
+            </a>
+          )
+        }
+        <a class="link-arrow tk-link" href={site.resume.href}>
+          <Icon name="printer" /> Résumé
+        </a>
+      </span>
     </div>
   </div>
 </section>
@@ -94,9 +98,9 @@ import { site, linkedin, catalog } from '@/data/site';
   }
 
   .tk-title {
-    max-width: 14ch;
-    font-size: clamp(2.6rem, 1.4rem + 5vw, 5.6rem);
-    line-height: 0.84;
+    max-width: 16ch;
+    font-size: clamp(2.3rem, 1.4rem + 3.4vw, 4.2rem);
+    line-height: 0.86;
   }
 
   .tk-details {
@@ -164,10 +168,32 @@ import { site, linkedin, catalog } from '@/data/site';
     font-size: 0.72rem;
   }
 
+  /* At the counter: one clear button, the rest as quiet links. */
   .tk-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
+    align-items: center;
+    gap: 1rem 2rem;
     margin-top: 2rem;
+  }
+
+  .tk-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.75rem;
+  }
+
+  .tk-links :global(.tk-link) {
+    min-height: 2.75rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .tk-links :global(.tk-link:hover) {
+    color: var(--red-ink);
   }
 </style>

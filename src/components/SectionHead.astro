@@ -1,21 +1,106 @@
 ---
-/** Track number + plain label (for skimmers) + poster title (for the vibe). */
+/**
+ * A crate divider: the card that sticks up between sections of a record bin.
+ * The tab carries the track number and a plain label (for skimmers); the title
+ * is set quietly in the serif, so the records stay the loudest thing in the room.
+ */
 interface Props {
   id: string;
   track: string;
   label: string;
   title: string;
-  /** Right-hand meta on the track line, e.g. a count. */
+  /** Right-hand meta on the divider's edge, e.g. a count. */
   meta?: string;
 }
 const { id, track, label, title, meta } = Astro.props;
 ---
 
 <header class="sec-head">
-  <p class="track">
-    <span><span class="track-no">{track}</span><span class="wide">{label}</span></span>
-    {meta && <span class="mono">{meta}</span>}
+  <p class="sh-edge">
+    <span class="sh-tab"><span class="mono sh-no">{track}</span><span class="wide">{label}</span></span>
+    <span class="sh-rule">{meta && <span class="mono sh-meta">{meta}</span>}</span>
   </p>
-  <h2 class="display" id={id}>{title}</h2>
-  {Astro.slots.has('default') && <div class="lede"><slot /></div>}
+  <div class="sh-body">
+    <h2 class="serif sh-title" id={id}>{title}</h2>
+    {Astro.slots.has('default') && <div class="sh-lede"><slot /></div>}
+  </div>
 </header>
+
+<style>
+  .sec-head {
+    display: grid;
+    gap: clamp(1.1rem, 0.8rem + 1vw, 1.6rem);
+    margin-bottom: clamp(2.25rem, 1.5rem + 2.5vw, 3.75rem);
+  }
+
+  /* The top edge of the divider card, with its tab standing proud. */
+  .sh-edge {
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .sh-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.95rem 0.45rem 0.8rem;
+    border: 1px solid var(--ink);
+    border-bottom: 0;
+    border-radius: 0.55rem 0.55rem 0 0;
+    background: var(--card);
+    white-space: nowrap;
+  }
+
+  .sh-no {
+    font-size: 0.72rem;
+    color: var(--red-ink);
+  }
+
+  .sh-rule {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    min-width: 1rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--ink);
+  }
+
+  .sh-meta {
+    font-size: 0.72rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .sh-body {
+    display: grid;
+    gap: 0.9rem 3rem;
+    align-items: end;
+  }
+
+  @media (min-width: 52rem) {
+    .sh-body {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+  }
+
+  .sh-title {
+    font-size: clamp(2.5rem, 1.7rem + 3.2vw, 4.6rem);
+    line-height: 0.95;
+    letter-spacing: -0.015em;
+  }
+
+  .sh-lede {
+    max-width: 32rem;
+    color: var(--muted);
+    font-size: var(--step-0);
+    line-height: 1.55;
+  }
+
+  @media (min-width: 52rem) {
+    .sh-lede {
+      justify-self: end;
+      padding-bottom: 0.35rem;
+    }
+  }
+</style>

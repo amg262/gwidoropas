@@ -6,6 +6,8 @@ import Sleeve from '@/components/Sleeve.astro';
 import Record from '@/components/Record.astro';
 import Icon from '@/components/Icon.astro';
 import MotionToggle from '@/components/MotionToggle.astro';
+import Inserts from '@/components/Inserts.astro';
+import InsertPeek from '@/components/InsertPeek.astro';
 import { site } from '@/data/site';
 import { getWork, canonicalUrl, type Work } from '@/lib/work';
 
@@ -73,6 +75,7 @@ const breadcrumbLd = {
     <header class="container a-head">
       <div class="a-art">
         <div class="a-turntable">
+          {d.inserts && <InsertPeek class="a-peek" images={d.inserts.items.map((it) => it.image)} />}
           <Record class="a-record" uid="album" ring={`${site.label.name} · ${d.album} · ${d.catalog} · `} center={d.catalog} sub={d.album} labelBg={d.cover.accent} labelFg={d.cover.bg} />
           <Sleeve
             class="a-sleeve"
@@ -174,6 +177,13 @@ const breadcrumbLd = {
                   </a>
                 </li>
               ))}
+              {d.inserts && (
+                <li>
+                  <a href="#inserts">
+                    <span class="mono">Insert</span> {d.inserts.title}
+                  </a>
+                </li>
+              )}
               {d.remaster && (
                 <li class="bonus">
                   <a href="#remaster">
@@ -185,8 +195,11 @@ const breadcrumbLd = {
           </nav>
         )
       }
-      <div class="prose">
-        <Content />
+      <div class="a-main">
+        <div class="prose">
+          <Content />
+        </div>
+        {d.inserts && <Inserts inserts={d.inserts} />}
       </div>
     </div>
 
@@ -309,6 +322,13 @@ const breadcrumbLd = {
     z-index: 1;
     transform: translateX(38%);
     animation: album-out 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both;
+  }
+
+  /* The peek fills the sleeve's box, so the inserts rise out of its top edge. */
+  .a-turntable :global(.a-peek) {
+    inset: 0 auto auto 0;
+    width: 72.5%;
+    aspect-ratio: 1;
   }
 
   @keyframes album-out {
@@ -557,7 +577,7 @@ const breadcrumbLd = {
   }
 
   .tracklist .mono {
-    min-width: 2.6rem;
+    min-width: 3rem;
     font-size: 0.76rem;
     color: var(--red-ink);
     padding-top: 0.15rem;

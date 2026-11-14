@@ -1,0 +1,63 @@
+---
+/**
+ * The top edges of a release's inserts, peeking out of the sleeve as if
+ * tucked in behind the record. A small tell that there's real work inside;
+ * the case study shows the inserts themselves. Place it inside the box the
+ * sleeve fills, behind the sleeve. Decorative: hidden from assistive tech.
+ */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  images: ImageMetadata[];
+  class?: string;
+}
+
+const { images, class: className } = Astro.props;
+---
+
+<span class:list={['peek', className]} aria-hidden="true">
+  {images.slice(0, 2).map((src, i) => <Image src={src} alt="" widths={[200, 400]} sizes="10rem" class:list={['peek-card', `peek-${i}`]} />)}
+</span>
+
+<style>
+  .peek {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .peek :global(.peek-card) {
+    position: absolute;
+    top: -10%;
+    width: 31%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    border-radius: 1px;
+    box-shadow:
+      0 0 0 1px rgb(22 19 15 / 0.08),
+      0 6px 12px -6px rgb(0 0 0 / 0.5);
+    transition:
+      translate 0.6s var(--ease),
+      rotate 0.6s var(--ease);
+  }
+
+  .peek :global(.peek-0) {
+    left: 22%;
+    rotate: -5deg;
+  }
+
+  .peek :global(.peek-1) {
+    top: -7.5%;
+    left: 44%;
+    rotate: 4deg;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .peek :global(.peek-card) {
+      transition: none;
+    }
+  }
+</style>

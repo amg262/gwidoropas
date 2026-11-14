@@ -1,6 +1,7 @@
 ---
 import Sleeve from './Sleeve.astro';
 import Record from './Record.astro';
+import InsertPeek from './InsertPeek.astro';
 import type { Work } from '@/lib/work';
 import { uid } from '@/lib/uid';
 import { site } from '@/data/site';
@@ -20,6 +21,7 @@ const price = lead.pending ? 'TBA' : lead.value;
 <article class="card">
   <a class="card-link" href={`/work/${entry.id}`}>
     <div class="card-art">
+      {d.inserts && <InsertPeek class="card-peek" images={d.inserts.items.map((it) => it.image)} />}
       <Record class="card-record" uid={uid('cr')} ring={`${site.label.name} · ${d.album} · `} center={d.catalog} labelBg={d.cover.accent} labelFg={d.cover.bg} />
       <Sleeve
         class="card-sleeve"
@@ -110,6 +112,12 @@ const price = lead.pending ? 'TBA' : lead.value;
   .card-link:hover :global(.card-record .disc),
   .card-link:focus-visible :global(.card-record .disc) {
     animation-play-state: running;
+  }
+
+  /* Inserts tucked in behind the record lift a little as it slides out. */
+  .card-link:hover :global(.card-peek .peek-card),
+  .card-link:focus-visible :global(.card-peek .peek-card) {
+    translate: 0 -12%;
   }
 
   /* The ledge: runs on through the gaps, so the row reads as one shelf. */

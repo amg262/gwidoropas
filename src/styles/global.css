@@ -2,23 +2,28 @@
    ROPAS RECORDS: design tokens
    Mid-century jazz label meets Swiss print: sleeve-cream paper, vinyl black,
    a vermilion label red and a handful of ink colours for the covers.
+
+   Light and dark live side by side: every colour that changes is written
+   light-dark(<light>, <dark>), and `color-scheme` picks the side. It follows
+   the visitor's system until they flip the switch in the header
+   (ThemeToggle.astro sets <html data-theme>); print is always light.
    ────────────────────────────────────────────────────────────────────────── */
 :root {
   color-scheme: light dark;
 
   /* Paper & ink */
-  --paper: #efe8da;
-  --paper-2: #e6ddca;
-  --card: #f7f2e8;
-  --ink: #16130f;
-  --ink-2: #3a352e;
-  --muted: #625b4f;
-  --line: #cfc4ae;
-  --line-soft: #ddd3c0;
+  --paper: light-dark(#efe8da, #12100d);
+  --paper-2: light-dark(#e6ddca, #191612);
+  --card: light-dark(#f7f2e8, #1e1a15);
+  --ink: light-dark(#16130f, #efe8da);
+  --ink-2: light-dark(#3a352e, #d2c9b8);
+  --muted: light-dark(#625b4f, #a39a8b);
+  --line: light-dark(#cfc4ae, #3a342b);
+  --line-soft: light-dark(#ddd3c0, #2a261f);
 
   /* Label inks (fills, covers, stickers) */
-  --red: #e0452b;
-  --red-ink: #b3321c; /* text-safe red on paper */
+  --red: light-dark(#e0452b, #f0583c);
+  --red-ink: light-dark(#b3321c, #ff8166); /* text-safe red on the paper */
   --mustard: #e9b13b;
   --cobalt: #2a47c0;
   --teal: #1e5e55;
@@ -27,19 +32,19 @@
   --vinyl: #0e0d0b;
 
   /* Shop fittings: the crate, the wall ledge, kraft sleeves, a felt letterboard */
-  --wood: #c99d6b;
-  --wood-2: #b5875a;
-  --wood-edge: #8a6140;
-  --kraft: #cdb28a;
-  --ledge: #16130f;
+  --wood: light-dark(#c99d6b, #9a7350);
+  --wood-2: light-dark(#b5875a, #85613f);
+  --wood-edge: light-dark(#8a6140, #5e412a);
+  --kraft: light-dark(#cdb28a, #a88d68);
+  --ledge: light-dark(#16130f, #3a342b);
   --felt: #141210;
 
-  /* Full-bleed bands (Side B, footer) */
-  --band: #16130f;
-  --band-2: #221e19;
+  /* Full-bleed bands (the listening booth, the footer) */
+  --band: light-dark(#16130f, #1f1b16);
+  --band-2: light-dark(#221e19, #2a251f);
   --band-ink: #efe8da;
   --band-muted: #b5ab99;
-  --band-line: #3b352d;
+  --band-line: light-dark(#3b352d, #3e382f);
 
   /* Type */
   --step--2: clamp(0.7rem, 0.68rem + 0.1vw, 0.76rem);
@@ -60,34 +65,25 @@
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --spin: 1.8s; /* 33⅓ rpm */
 
-  --shadow-sleeve: 0 1px 0 rgb(0 0 0 / 0.04), 0 18px 40px -18px rgb(30 20 10 / 0.45), 0 4px 10px -4px rgb(30 20 10 / 0.25);
+  /* In the dark, a faint rim instead of the paper's top highlight, and deeper shade. */
+  --shadow-sleeve:
+    0 0 0 1px light-dark(transparent, rgb(255 255 255 / 0.06)), 0 1px 0 light-dark(rgb(0 0 0 / 0.04), transparent),
+    0 18px 40px -18px light-dark(rgb(30 20 10 / 0.45), rgb(0 0 0 / 0.85)), 0 4px 10px -4px light-dark(rgb(30 20 10 / 0.25), rgb(0 0 0 / 0.4));
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #12100d;
-    --paper-2: #191612;
-    --card: #1e1a15;
-    --ink: #efe8da;
-    --ink-2: #d2c9b8;
-    --muted: #a39a8b;
-    --line: #3a342b;
-    --line-soft: #2a261f;
+/* The visitor's choice beats the system's. */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
 
-    --red: #f0583c;
-    --red-ink: #ff8166;
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
 
-    --band: #1f1b16;
-    --band-2: #2a251f;
-    --band-line: #3e382f;
-
-    --shadow-sleeve: 0 0 0 1px rgb(255 255 255 / 0.06), 0 22px 44px -20px rgb(0 0 0 / 0.9);
-
-    --wood: #9a7350;
-    --wood-2: #85613f;
-    --wood-edge: #5e412a;
-    --kraft: #a88d68;
-    --ledge: #3a342b;
+@media print {
+  :root,
+  :root[data-theme] {
+    color-scheme: light;
   }
 }
 
@@ -139,16 +135,10 @@ body::after {
   inset: 0;
   z-index: 200;
   pointer-events: none;
-  opacity: 0.07;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 180px;
-}
-
-@media (prefers-color-scheme: dark) {
-  body::after {
-    opacity: 0.1;
-    filter: invert(1);
-  }
+  /* The noise is the mask; the ink is dark specks on paper, light specks in the dark. */
+  background: light-dark(rgb(0 0 0 / 0.07), rgb(255 255 255 / 0.1));
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") 0 0 / 180px;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") 0 0 / 180px;
 }
 
 /* Spinning records rotate a square SVG box; clip it so it never adds sideways scroll. */
@@ -293,7 +283,6 @@ a:hover {
   --line-soft: var(--band-line);
   --ledge: var(--band-line);
   --shadow-sleeve: 0 0 0 1px rgb(255 255 255 / 0.05), 0 22px 44px -20px rgb(0 0 0 / 0.9);
-  color-scheme: dark;
 }
 
 .visually-hidden {

@@ -262,8 +262,9 @@ If the package is private, add `--registry-server ghcr.io --registry-username <g
 | Art | Generative SVG covers (`src/lib/cover.ts`), SVG vinyl (`Record.astro`) | Crisp at any size, tiny, and the same function feeds the share images. |
 | Photo | `astro:assets` `<Picture>`: AVIF → WebP → JPEG at 240/360/483 px | ~12 kB for most visitors; lazy-loaded below the fold. |
 | Link previews | Satori + Sharp at build time | Each page gets a 1200×630 card that looks like its sleeve. Static Archivo cuts live in `src/assets/og-fonts/` (OFL) because Satori can't read variable fonts. The README record is pressed the same way. |
+| Light & dark | Every changing colour is a `light-dark()` token in `global.css`; `color-scheme` picks the side | It follows the visitor's system until they flip the record-shaped switch in the header (`ThemeToggle.astro`). The choice is remembered and applied before paint, so there's no flash. Picking your system's side again forgets it. Print is always light. |
 | Motion | CSS only; 33⅓ rpm records, equalizers, crate sleeves that settle on scroll | A "Stop the record" button pauses every loop (WCAG 2.2.2); reduced-motion users start paused, and the scroll-driven settle only runs while the record is playing. |
-| JavaScript | The crate (upgrades links into ARIA tabs; find-in-page still reaches hidden notes via `hidden="until-found"`), copy-email button, motion toggle, mobile Browse menu (Popover API), print button, analytics | Everything works without it: with JS off the crate is a list of links and every set of notes is shown. |
+| JavaScript | The light/dark switch, the crate (upgrades links into ARIA tabs; find-in-page still reaches hidden notes via `hidden="until-found"`), copy-email button, motion toggle, mobile Browse menu (Popover API), print button, analytics | Everything works without it: with JS off the crate is a list of links and every set of notes is shown. |
 | Hosting | Vercel (production) + a container image on GHCR | Vercel for zero-ops previews and the edge; the image so the site isn't locked to one host. One header contract (`vercel.json`) for both. |
 | CI/CD | GitHub Actions: verify → container contract test → semver release | Every merge is tested the way production behaves, versioned, attested and reproducible. |
 
@@ -280,11 +281,12 @@ src/
 │   ├── Sleeve.astro        ← album cover + typography (optional obi)
 │   ├── Obi.astro           ← the paper band with the title in vertical type
 │   ├── SectionHead.astro   ← the crate-divider tab that heads each section
+│   ├── ThemeToggle.astro   ← the light/dark switch
 │   └── …                   ← Header, Footer, LabelMark, ReleaseCard, MotionToggle
 ├── lib/                    ← cover art, OG renderer, date helpers,
 │                             visibility.ts (unlisted vs public)
 ├── pages/                  ← index, work/[id], resume, 404, og images, favicon
-└── styles/global.css       ← tokens: paper, ink, label colours, type voices
+└── styles/global.css       ← tokens (light and dark): paper, ink, label colours, type voices
 
 Dockerfile                  ← build with Node, serve with unprivileged nginx
 compose.yaml                ← run the container locally, hardened
